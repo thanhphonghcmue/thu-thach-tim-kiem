@@ -65,14 +65,39 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
   const [showDriverSwapModal, setShowDriverSwapModal] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('app_user');
-    if (!saved) {
-      router.push(`/login?role=student&returnUrl=${encodeURIComponent(`/student/room/${roomCode}/play`)}`);
+    let studentId = '';
+    const partSaved = localStorage.getItem(`student_session_${roomCode}`);
+    if (partSaved) {
+      try {
+        const p = JSON.parse(partSaved);
+        studentId = p.id;
+        setUser({
+          id: p.id,
+          role: 'student',
+          name: p.nickname,
+          username: p.nickname,
+          createdAt: p.joinedAt,
+        });
+      } catch (e) {}
+    }
+
+    if (!studentId) {
+      const saved = localStorage.getItem('app_user');
+      if (saved) {
+        try {
+          const u = JSON.parse(saved);
+          studentId = u.id;
+          setUser(u);
+        } catch (e) {}
+      }
+    }
+
+    if (!studentId) {
+      router.push(`/join?room=${roomCode}`);
       return;
     }
-    const u = JSON.parse(saved);
-    setUser(u);
-    loadRoomAndDraft(u.id);
+
+    loadRoomAndDraft(studentId);
 
     // Lắng nghe realtime SSE
     const eventSource = new EventSource(`/api/rooms/${roomCode}/events`);
@@ -81,7 +106,7 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
         const payload = JSON.parse(event.data);
         if (payload.type === 'group_draft_updated' && payload.data.groupId === myGroup?.id) {
           // Nếu người khác lưu bản nháp, cập nhật giao diện thành viên
-          if (payload.data.draft.updatedBy !== u.id) {
+          if (payload.data.draft.updatedBy !== studentId) {
             setMcqAnswers(payload.data.draft.mcqAnswers || {});
             if (payload.data.draft.handTrace) {
               setHandTraceData(payload.data.draft.handTrace);
@@ -91,14 +116,14 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
         } else if (payload.type === 'scores_published' || (payload.type === 'room_updated' && payload.data.status === 'published')) {
           router.push(`/student/room/${roomCode}/result`);
         } else if (payload.type === 'driver_changed' && payload.data.groupId === myGroup?.id) {
-          loadRoomAndDraft(u.id);
+          loadRoomAndDraft(studentId);
         }
       } catch (err) {}
     };
 
     // Định kỳ đồng bộ 4 giây
     const interval = setInterval(() => {
-      loadRoomAndDraft(u.id);
+      loadRoomAndDraft(studentId);
     }, 4000);
 
     return () => {

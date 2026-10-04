@@ -38,7 +38,36 @@ export async function GET(request: Request, props: { params: Promise<{ code: str
 
   const groups = store.getGroupsByRoom(room.id);
   const enhancedGroups = groups.map(g => {
-    const members = g.studentIds.map(sId => store.getUserById(sId)).filter(Boolean);
+    const members = g.studentIds.map(sId => {
+      const p = store.getParticipantById(sId);
+      if (p) {
+        return {
+          id: p.id,
+          name: p.nickname,
+          nickname: p.nickname,
+          avatar: p.avatar,
+          isReady: p.isReady,
+          isOnline: p.isOnline,
+          role: p.role || g.memberRoles[p.id] || 'verifier',
+          lastActive: p.lastActive,
+        };
+      }
+      const u = store.getUserById(sId);
+      if (u) {
+        return {
+          id: u.id,
+          name: u.name,
+          nickname: u.name,
+          avatar: 'cat',
+          isReady: true,
+          isOnline: true,
+          role: g.memberRoles[u.id] || 'verifier',
+          lastActive: u.createdAt,
+        };
+      }
+      return null;
+    }).filter(Boolean);
+
     const draft = store.getDraft(g.id);
     const submission = store.getSubmission(g.id);
 
@@ -62,12 +91,14 @@ export async function GET(request: Request, props: { params: Promise<{ code: str
     };
   });
 
+  const allParticipants = store.getParticipantsByRoom(room.id);
   const leaderboard = (isPublished || isTeacher) ? store.getLeaderboard(room.id) : [];
 
   return NextResponse.json({
     room,
     questions,
     groups: enhancedGroups,
+    participants: allParticipants,
     leaderboard,
   });
 }

@@ -30,19 +30,44 @@ export default function StudentResultPage({ params }: { params: Promise<{ code: 
   const [revisedSuccess, setRevisedSuccess] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('app_user');
-    if (!saved) {
-      router.push(`/login?role=student&returnUrl=${encodeURIComponent(`/student/room/${roomCode}/result`)}`);
+    let studentId = '';
+    const partSaved = localStorage.getItem(`student_session_${roomCode}`);
+    if (partSaved) {
+      try {
+        const p = JSON.parse(partSaved);
+        studentId = p.id;
+        setUser({
+          id: p.id,
+          role: 'student',
+          name: p.nickname,
+          username: p.nickname,
+          createdAt: p.joinedAt,
+        });
+      } catch (e) {}
+    }
+
+    if (!studentId) {
+      const saved = localStorage.getItem('app_user');
+      if (saved) {
+        try {
+          const u = JSON.parse(saved);
+          studentId = u.id;
+          setUser(u);
+        } catch (e) {}
+      }
+    }
+
+    if (!studentId) {
+      router.push(`/join?room=${roomCode}`);
       return;
     }
-    const u = JSON.parse(saved);
-    setUser(u);
-    loadData(u.id);
+
+    loadData(studentId);
 
     // Lắng nghe SSE
     const eventSource = new EventSource(`/api/rooms/${roomCode}/events`);
     eventSource.onmessage = () => {
-      loadData(u.id);
+      loadData(studentId);
     };
 
     return () => {

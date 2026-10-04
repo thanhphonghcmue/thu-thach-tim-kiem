@@ -12,6 +12,7 @@ import {
   RoomStatus,
   SuggestedRole,
   TeacherAdjustment,
+  Participant,
 } from '@/types';
 import { broadcastRoomEvent } from './events';
 import { gradeSubmission } from './grading';
@@ -21,6 +22,7 @@ interface DatabaseSchema {
   classes: Record<string, ClassRoom>;
   rooms: Record<string, Room>;
   groups: Record<string, Group>;
+  participants: Record<string, Participant>; // participantId -> Participant
   drafts: Record<string, GroupDraft>; // groupId -> GroupDraft
   submissions: Record<string, GroupSubmission>; // groupId -> GroupSubmission
   reflections: IndividualReflection[];
@@ -44,7 +46,9 @@ class Store {
       }
       if (fs.existsSync(DB_FILE)) {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
-        return JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        if (!parsed.participants) parsed.participants = {};
+        return parsed;
       }
     } catch (err) {
       console.error('Error loading db.json, initializing empty db', err);
@@ -54,6 +58,7 @@ class Store {
       classes: {},
       rooms: {},
       groups: {},
+      participants: {},
       drafts: {},
       submissions: {},
       reflections: [],
@@ -236,6 +241,202 @@ class Store {
     this.data.classes[id] = newClass;
     this.saveDatabase();
     return newClass;
+  }
+
+  // --- PARTICIPANTS API (Tham gia nhanh bằng biệt danh & avatar) ---
+  getParticipantById(id: string): Participant | undefined {
+    return this.data.participants[id];
+  }
+
+  getParticipantsByRoom(roomId: string): Participant[] {
+    return Object.values(this.data.participants).filter(p => p.roomId === roomId);
+  }
+
+  joinRoomParticipant(
+    roomCode: string,
+    nickname: string,
+    avatar: any,
+    targetGroupId?: string
+  ): { success: boolean; participant?: Participant; error?: string } {
+    const room = this.getRoomByCode(roomCode);
+    if (!room) {
+      return { success: false, error: 'Phòng thi không tồn tại hoặc đã bị đóng' };
+    }
+
+    if (room.isLocked) {
+      return { success: false, error: 'Phòng thi đã bị khóa, không nhận thêm người tham gia' };
+    }
+
+    if (room.status === 'closed') {
+      return { success: false, error: 'Phòng thi này đã kết thúc' };
+    }
+
+    const cleanNick = nickname.trim();
+    if (!cleanNick) {
+      return { success: false, error: 'Vui lòng nhập tên hoặc biệt danh của bạn' };
+    }
+
+    // Xử lý trùng biệt danh trong cùng phòng: thêm số (VD: "Nam (2)")
+    const existingInRoom = this.getParticipantsByRoom(room.id);
+    let finalNickname = cleanNick;
+    let duplicateCount = 1;
+    while (existingInRoom.some(p => p.nickname.toLowerCase() === finalNickname.toLowerCase())) {
+      duplicateCount++;
+      finalNickname = `${cleanNick} (${duplicateCount})`;
+    }
+
+    // Xác định nhóm tham gia
+    const roomGroups = this.getGroupsByRoom(room.id);
+    let assignedGroup = roomGroups.find(g => g.id === targetGroupId);
+    if (!assignedGroup) {
+      // Nếu không chỉ định nhóm hoặc nhóm không tồn tại, tự động xếp vào nhóm có ít thành viên nhất
+      if (roomGroups.length > 0) {
+        assignedGroup = [...roomGroups].sort((a, b) => a.studentIds.length - b.studentIds.length)[0];
+      }
+    }
+
+    if (!assignedGroup) {
+      return { success: false, error: 'Phòng chưa có nhóm để tham gia' };
+    }
+
+    const participantId = `p-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const participant: Participant = {
+      id: participantId,
+      roomId: room.id,
+      groupId: assignedGroup.id,
+      nickname: finalNickname,
+      avatar: avatar || 'cat',
+      isReady: false,
+      role: 'verifier',
+      isOnline: true,
+      joinedAt: new Date().toISOString(),
+      lastActive: new Date().toISOString(),
+    };
+
+    this.data.participants[participantId] = participant;
+
+    // Thêm vào nhóm
+    if (!assignedGroup.studentIds.includes(participantId)) {
+      assignedGroup.studentIds.push(participantId);
+    }
+    // Nếu nhóm chưa có người điều khiển, chỉ định bạn đầu tiên làm người điều khiển
+    if (!assignedGroup.driverStudentId) {
+      assignedGroup.driverStudentId = participantId;
+      participant.role = 'driver';
+    }
+
+    assignedGroup.lastSyncedAt = new Date().toISOString();
+    this.saveDatabase();
+
+    broadcastRoomEvent({
+      type: 'room_updated',
+      roomId: room.id,
+      data: { action: 'participant_joined', participant },
+    });
+
+    return { success: true, participant };
+  }
+
+  setParticipantReady(participantId: string, isReady: boolean): boolean {
+    const p = this.data.participants[participantId];
+    if (!p) return false;
+
+    p.isReady = isReady;
+    p.lastActive = new Date().toISOString();
+    this.saveDatabase();
+
+    broadcastRoomEvent({
+      type: 'room_updated',
+      roomId: p.roomId,
+      data: { action: 'participant_ready_changed', participantId, isReady },
+    });
+
+    return true;
+  }
+
+  manageParticipant(
+    roomCode: string,
+    teacherId: string,
+    participantId: string,
+    action: 'rename' | 'move_group' | 'kick',
+    payload: any
+  ): { success: boolean; error?: string } {
+    const room = this.getRoomByCode(roomCode);
+    if (!room || room.teacherId !== teacherId) {
+      return { success: false, error: 'Chỉ giáo viên sở hữu phòng mới có quyền điều chỉnh' };
+    }
+
+    const p = this.data.participants[participantId];
+    if (!p) return { success: false, error: 'Không tìm thấy người tham gia' };
+
+    if (action === 'kick') {
+      // Xóa khỏi nhóm
+      const group = this.data.groups[p.groupId];
+      if (group) {
+        group.studentIds = group.studentIds.filter(id => id !== participantId);
+        if (group.driverStudentId === participantId) {
+          group.driverStudentId = group.studentIds[0] || '';
+        }
+      }
+      delete this.data.participants[participantId];
+      this.saveDatabase();
+
+      broadcastRoomEvent({
+        type: 'room_updated',
+        roomId: room.id,
+        data: { action: 'participant_kicked', participantId },
+      });
+      return { success: true };
+    }
+
+    if (action === 'rename') {
+      const newName = (payload.newName || '').trim();
+      if (!newName) return { success: false, error: 'Tên không hợp lệ' };
+      p.nickname = newName;
+      this.saveDatabase();
+
+      broadcastRoomEvent({
+        type: 'room_updated',
+        roomId: room.id,
+        data: { action: 'participant_renamed', participant: p },
+      });
+      return { success: true };
+    }
+
+    if (action === 'move_group') {
+      const targetGroupId = payload.targetGroupId;
+      const targetGroup = this.data.groups[targetGroupId];
+      if (!targetGroup) return { success: false, error: 'Nhóm chuyển tới không tồn tại' };
+
+      // Xóa khỏi nhóm cũ
+      const oldGroup = this.data.groups[p.groupId];
+      if (oldGroup) {
+        oldGroup.studentIds = oldGroup.studentIds.filter(id => id !== participantId);
+        if (oldGroup.driverStudentId === participantId) {
+          oldGroup.driverStudentId = oldGroup.studentIds[0] || '';
+        }
+      }
+
+      // Thêm vào nhóm mới
+      p.groupId = targetGroupId;
+      if (!targetGroup.studentIds.includes(participantId)) {
+        targetGroup.studentIds.push(participantId);
+      }
+      if (!targetGroup.driverStudentId) {
+        targetGroup.driverStudentId = participantId;
+      }
+
+      this.saveDatabase();
+
+      broadcastRoomEvent({
+        type: 'room_updated',
+        roomId: room.id,
+        data: { action: 'participant_moved', participant: p },
+      });
+      return { success: true };
+    }
+
+    return { success: false, error: 'Hành động không hợp lệ' };
   }
 
   // --- ROOM API ---

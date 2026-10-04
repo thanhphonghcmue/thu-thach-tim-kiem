@@ -31,10 +31,27 @@ export type RoomStatus = 'draft' | 'waiting' | 'running' | 'paused' | 'closed' |
 
 export type SuggestedRole = 'driver' | 'index_calculator' | 'verifier' | 'recorder_explainer';
 
+export type AvatarId = 'cat' | 'bear' | 'rabbit' | 'fox' | 'penguin' | 'dino' | 'panda' | 'lion' | 'dog' | 'koala' | 'frog' | 'unicorn';
+
+export interface Participant {
+  id: string; // Mã định danh riêng (UUID)
+  roomId: string;
+  groupId: string;
+  nickname: string;
+  avatar: AvatarId;
+  isReady: boolean;
+  role?: SuggestedRole;
+  isOnline: boolean;
+  joinedAt: string;
+  lastActive: string;
+}
+
 export interface GroupMemberInfo {
   studentId: string;
   name: string;
   username: string;
+  avatar?: AvatarId;
+  isReady?: boolean;
   role: SuggestedRole;
   isOnline: boolean;
   lastActive: string;

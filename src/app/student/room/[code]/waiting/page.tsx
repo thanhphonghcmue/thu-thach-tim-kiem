@@ -3,45 +3,61 @@
 import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
-import RoleBadge, { ROLE_INFO } from '@/components/RoleBadge';
-import { Room, Group, User, SuggestedRole } from '@/types';
-import { Clock, Users, ShieldCheck, BookOpen, AlertCircle, Sparkles } from 'lucide-react';
+import { getAvatarInfo } from '@/components/AvatarPicker';
+import { Room, Group, Participant } from '@/types';
+import { Clock, Users, CheckCircle2, Sparkles, BookOpen, Check } from 'lucide-react';
 
 export default function StudentWaitingRoom({ params }: { params: Promise<{ code: string }> }) {
   const resolvedParams = use(params);
   const roomCode = resolvedParams.code.toUpperCase();
   const router = useRouter();
 
-  const [user, setUser] = useState<User | null>(null);
+  const [currentParticipant, setCurrentParticipant] = useState<Participant | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
-  const [myGroup, setMyGroup] = useState<any | null>(null);
+  const [myGroup, setMyGroup] = useState<Group | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [isReady, setIsReady] = useState(false);
+  const [togglingReady, setTogglingReady] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem('app_user');
+    // 1. Kiểm tra session học sinh
+    const saved = localStorage.getItem(`student_session_${roomCode}`);
     if (!saved) {
-      router.push(`/login?role=student&returnUrl=${encodeURIComponent(`/student/room/${roomCode}/waiting`)}`);
+      router.push(`/join?room=${roomCode}`);
       return;
     }
-    const u = JSON.parse(saved);
-    setUser(u);
-    loadRoom(u.id);
 
-    // Lắng nghe SSE
+    try {
+      const p = JSON.parse(saved);
+      setCurrentParticipant(p);
+      setIsReady(p.isReady || false);
+      loadRoom(p.id);
+    } catch (e) {
+      router.push(`/join?room=${roomCode}`);
+    }
+
+    // 2. Kết nối Realtime SSE
     const eventSource = new EventSource(`/api/rooms/${roomCode}/events`);
     eventSource.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data);
-        if (payload.type === 'room_updated' && payload.data.status === 'running') {
+        if (payload.type === 'room_updated' && payload.data?.status === 'running') {
           router.push(`/student/room/${roomCode}/play`);
         } else {
-          loadRoom(u.id);
+          const pSaved = localStorage.getItem(`student_session_${roomCode}`);
+          if (pSaved) {
+            loadRoom(JSON.parse(pSaved).id);
+          }
         }
       } catch (e) {}
     };
 
     const interval = setInterval(() => {
-      loadRoom(u.id);
+      const pSaved = localStorage.getItem(`student_session_${roomCode}`);
+      if (pSaved) {
+        loadRoom(JSON.parse(pSaved).id);
+      }
     }, 2500);
 
     return () => {
@@ -50,10 +66,12 @@ export default function StudentWaitingRoom({ params }: { params: Promise<{ code:
     };
   }, [roomCode]);
 
-  const loadRoom = async (studentId: string) => {
+  const loadRoom = async (participantId: string) => {
     try {
-      const res = await fetch(`/api/rooms/${roomCode}?studentId=${studentId}`);
+      const res = await fetch(`/api/rooms/${roomCode}?studentId=${participantId}`);
       const data = await res.json();
+      if (!res.ok) return;
+
       if (data.room) {
         setRoom(data.room);
         if (data.room.status === 'running') {
@@ -61,8 +79,19 @@ export default function StudentWaitingRoom({ params }: { params: Promise<{ code:
           return;
         }
 
-        const group = data.groups?.find((g: any) => g.studentIds.includes(studentId));
-        setMyGroup(group || null);
+        const parts: Participant[] = data.participants || [];
+        setParticipants(parts);
+
+        // Cập nhật lại bản thân nếu giáo viên đổi tên hoặc chuyển nhóm
+        const myLatest = parts.find(p => p.id === participantId);
+        if (myLatest) {
+          setCurrentParticipant(myLatest);
+          setIsReady(myLatest.isReady);
+          localStorage.setItem(`student_session_${roomCode}`, JSON.stringify(myLatest));
+        }
+
+        const grp = data.groups?.find((g: any) => g.id === myLatest?.groupId || g.studentIds?.includes(participantId));
+        setMyGroup(grp || null);
       }
     } catch (err) {
       console.error(err);
@@ -71,112 +100,163 @@ export default function StudentWaitingRoom({ params }: { params: Promise<{ code:
     }
   };
 
-  const isDriver = myGroup && user && myGroup.driverStudentId === user.id;
+  const handleToggleReady = async () => {
+    if (!currentParticipant || togglingReady) return;
+    const nextState = !isReady;
+    setIsReady(nextState);
+    setTogglingReady(true);
+
+    try {
+      const res = await fetch(`/api/rooms/${roomCode}/ready`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          participantId: currentParticipant.id,
+          isReady: nextState,
+        }),
+      });
+
+      if (res.ok) {
+        const updated = { ...currentParticipant, isReady: nextState };
+        setCurrentParticipant(updated);
+        localStorage.setItem(`student_session_${roomCode}`, JSON.stringify(updated));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTogglingReady(false);
+    }
+  };
+
+  const myAvatarInfo = getAvatarInfo(currentParticipant?.avatar);
+  const readyCount = participants.filter(p => p.isReady).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Header currentUser={user} roomCode={roomCode} />
+    <div className="min-h-screen bg-slate-50 flex flex-col pb-16">
+      <Header roomCode={roomCode} />
 
-      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8 w-full space-y-6">
-        {/* Banner phòng chờ */}
-        <div className="bg-gradient-to-r from-sky-600 to-teal-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl text-center space-y-3 relative overflow-hidden">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold uppercase tracking-wider">
-            <Clock className="w-3.5 h-3.5 animate-spin" />
-            Phòng chờ hoạt động luyện tập
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-6 w-full space-y-6">
+        {/* Banner Chào mừng cá nhân của học sinh */}
+        <div className="bg-gradient-to-r from-teal-600 to-sky-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl text-center space-y-4 relative overflow-hidden">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/20 backdrop-blur text-xs font-bold uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             {room?.name || 'Thử thách Tìm kiếm - Tin học 11'}
-          </h1>
-
-          <p className="text-xs sm:text-sm text-sky-100 max-w-xl mx-auto leading-relaxed">
-            Em đã vào phòng thành công. Hãy cùng trao đổi với các bạn trong nhóm và chờ Thầy/Cô bấm bắt đầu làm bài!
-          </p>
-
-          <div className="pt-2">
-            <span className="inline-block px-4 py-1.5 rounded-xl bg-amber-400 text-slate-900 font-bold text-xs uppercase tracking-wider animate-pulse">
-              ⏳ Chờ giáo viên bắt đầu
-            </span>
           </div>
-        </div>
 
-        {/* Thông tin nhóm và vai trò thành viên */}
-        {myGroup && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
-              <div>
-                <span className="text-xs uppercase font-bold text-teal-600 block">Nhóm của em</span>
-                <h2 className="text-xl font-black text-slate-800">{myGroup.name}</h2>
-              </div>
-
-              {isDriver ? (
-                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-amber-600" />
-                  <span>Em đang là <strong>Người điều khiển</strong> (thao tác lưu bài làm)</span>
-                </div>
-              ) : (
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-xs">
-                  <span>Thành viên quan sát & hỗ trợ tính toán</span>
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur border-4 border-white flex items-center justify-center text-5xl shadow-lg mb-2 relative">
+              {myAvatarInfo.emoji}
+              {isReady && (
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white shadow">
+                  <Check className="w-4 h-4 stroke-[3]" />
                 </div>
               )}
             </div>
 
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+              Chào {currentParticipant?.nickname || 'bạn'}!
+            </h1>
+            <p className="text-xs sm:text-sm text-teal-100 mt-1">
+              Nhóm: <strong>{myGroup?.name || 'Đang xếp nhóm'}</strong> • Bạn đã vào phòng! Chờ giáo viên bắt đầu nhé.
+            </p>
+          </div>
+
+          {/* Nút bấm Sẵn sàng to rõ cho điện thoại */}
+          <div className="pt-2 flex justify-center">
+            <button
+              onClick={handleToggleReady}
+              disabled={togglingReady}
+              className={`px-8 py-3 rounded-2xl font-black text-sm flex items-center gap-2 transition-all shadow-lg cursor-pointer transform active:scale-95 ${
+                isReady
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 ring-4 ring-emerald-300/40'
+                  : 'bg-white hover:bg-slate-100 text-teal-900 shadow-black/10'
+              }`}
+            >
+              {isReady ? (
+                <>
+                  <CheckCircle2 className="w-5 h-5 text-white" />
+                  Đã sẵn sàng! (Bấm để hủy)
+                </>
+              ) : (
+                <>
+                  <span>👉 Bấm nút "Sẵn sàng"</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Danh sách người tham gia thời gian thực */}
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-                Thành viên trong nhóm ({myGroup.members?.length || 0} bạn):
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {myGroup.members?.map((m: any) => {
-                  const isCurrentDriver = m.id === myGroup.driverStudentId;
-                  const role: SuggestedRole = myGroup.memberRoles?.[m.id] || 'verifier';
+              <h2 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                <Users className="w-5 h-5 text-teal-600" />
+                Người chơi đang có mặt ({participants.length} bạn)
+              </h2>
+              <span className="text-xs text-slate-500">
+                {readyCount} bạn đã nhấn Sẵn sàng
+              </span>
+            </div>
 
-                  return (
-                    <div
-                      key={m.id}
-                      className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
-                        m.id === user?.id
-                          ? 'bg-teal-50/70 border-teal-300 ring-1 ring-teal-200'
-                          : 'bg-slate-50 border-slate-200'
-                      }`}
-                    >
-                      <div>
-                        <span className="font-bold text-sm text-slate-800 block">
-                          {m.name} {m.id === user?.id && <span className="text-xs text-teal-700">(Em)</span>}
-                        </span>
-                        <span className="text-[11px] text-slate-400 font-mono">
-                          Mã: {m.loginCode || m.username}
-                        </span>
-                      </div>
-
-                      <RoleBadge role={role} isDriver={isCurrentDriver} />
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[11px] font-semibold text-slate-600">
+              <Clock className="w-3.5 h-3.5 text-amber-500 animate-spin" />
+              Chờ giáo viên bấm Bắt đầu
             </div>
           </div>
-        )}
 
-        {/* Luật chơi và lưu ý sư phạm */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-3">
-          <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+          {participants.length === 0 ? (
+            <div className="text-center py-8 text-slate-400 text-xs">
+              Đang chờ các bạn khác vào phòng...
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {participants.map((p) => {
+                const av = getAvatarInfo(p.avatar);
+                const isMe = p.id === currentParticipant?.id;
+                const pGroup = room ? myGroup : null;
+
+                return (
+                  <div
+                    key={p.id}
+                    className={`p-3 rounded-2xl border-2 flex items-center gap-2.5 transition-all ${
+                      isMe
+                        ? 'border-teal-400 bg-teal-50/60 ring-2 ring-teal-200'
+                        : 'border-slate-200 bg-white hover:bg-slate-50/80'
+                    }`}
+                  >
+                    <div className="relative shrink-0">
+                      <span className="text-3xl block leading-none">{av.emoji}</span>
+                      {p.isReady && (
+                        <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border border-white flex items-center justify-center text-white text-[9px] font-black">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-xs text-slate-800 truncate block">
+                        {p.nickname} {isMe && <span className="text-[10px] text-teal-700">(Em)</span>}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block truncate">
+                        {p.isReady ? '🟢 Sẵn sàng' : '⚪ Đang chuẩn bị'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Hướng dẫn ngắn */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 text-xs text-slate-600 space-y-2">
+          <h3 className="font-bold text-slate-800 flex items-center gap-1.5">
             <BookOpen className="w-4 h-4 text-sky-600" />
-            Luật chơi và cấu trúc bài làm (10 điểm):
+            Lưu ý khi tham gia:
           </h3>
-          <ul className="text-xs text-slate-600 space-y-2 leading-relaxed">
-            <li>
-              • <strong>Chặng 1: Mở khóa kiến thức</strong> (5 điểm) — 5 câu trắc nghiệm so sánh tìm kiếm tuần tự và nhị phân.
-            </li>
-            <li>
-              • <strong>Chặng 2: Thu hẹp vùng tìm</strong> (5 điểm) — Mô phỏng chạy tay thuật toán nhị phân trên dãy 8 phần tử với K = 38.
-            </li>
-            <li>
-              • <strong>Phối hợp nhóm</strong>: Mỗi nhóm chỉ có một bài nộp chính thức. Sau phần trắc nghiệm, nhóm hãy đổi người điều khiển để bạn khác cùng thao tác máy!
-            </li>
-            <li>
-              • <strong>Chấm theo từng tiêu chí</strong>: Không mất toàn bộ điểm nếu sai một bước. Các bước đúng theo đáp án chuẩn vẫn được ghi nhận điểm.
-            </li>
-          </ul>
+          <p>• Khi Thầy/Cô bấm <strong>"Bắt đầu làm bài"</strong> trên máy chủ, màn hình điện thoại của em sẽ tự động chuyển sang câu hỏi trắc nghiệm và bài chạy tay.</p>
+          <p>• Nếu vô tình bị tải lại trang hoặc mất mạng trong tích tắc, đừng lo: thiết bị sẽ tự động giữ nguyên bài làm và đưa em trở lại phòng!</p>
         </div>
       </main>
     </div>

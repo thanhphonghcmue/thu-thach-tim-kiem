@@ -6,7 +6,8 @@ import Header from '@/components/Header';
 import QRCodeCard from '@/components/QRCodeCard';
 import RoleBadge from '@/components/RoleBadge';
 import RubricScoreBreakdown from '@/components/RubricScoreBreakdown';
-import { Room, Group, User, GroupSubmission, TeacherAdjustment } from '@/types';
+import { getAvatarInfo } from '@/components/AvatarPicker';
+import { Room, Group, User, GroupSubmission, TeacherAdjustment, Participant } from '@/types';
 import {
   Play,
   Pause,
@@ -24,6 +25,10 @@ import {
   UserCheck,
   Award,
   BookOpen,
+  Edit2,
+  Trash2,
+  ArrowRightLeft,
+  Users,
 } from 'lucide-react';
 
 export default function TeacherRoomMonitor({ params }: { params: Promise<{ code: string }> }) {
@@ -35,6 +40,7 @@ export default function TeacherRoomMonitor({ params }: { params: Promise<{ code:
   const [room, setRoom] = useState<Room | null>(null);
   const [groups, setGroups] = useState<any[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [reflections, setReflections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +53,12 @@ export default function TeacherRoomMonitor({ params }: { params: Promise<{ code:
 
   // Modal chuyển quyền điều khiển
   const [switchingGroup, setSwitchingGroup] = useState<any | null>(null);
+
+  // Modal quản lý người tham gia
+  const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
+  const [newParticipantName, setNewParticipantName] = useState('');
+  const [movingParticipant, setMovingParticipant] = useState<Participant | null>(null);
+  const [targetMoveGroupId, setTargetMoveGroupId] = useState('');
 
   // Hiển thị card QR
   const [showQrModal, setShowQrModal] = useState(false);
@@ -98,6 +110,7 @@ export default function TeacherRoomMonitor({ params }: { params: Promise<{ code:
         setGroups(data.groups || []);
         setQuestions(data.questions || []);
         setLeaderboard(data.leaderboard || []);
+        setParticipants(data.participants || []);
       }
 
       // Tải phản ánh cá nhân
@@ -110,6 +123,25 @@ export default function TeacherRoomMonitor({ params }: { params: Promise<{ code:
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleManageParticipant = async (participantId: string, action: 'kick' | 'rename' | 'move_group', payload?: any) => {
+    if (!user) return;
+    try {
+      await fetch(`/api/rooms/${roomCode}/participants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teacherId: user.id,
+          participantId,
+          action,
+          payload,
+        }),
+      });
+      loadRoomData(user.id);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -450,6 +482,77 @@ export default function TeacherRoomMonitor({ params }: { params: Promise<{ code:
           </div>
         </div>
 
+        {/* Danh sách học sinh tham gia & Thao tác của Giáo viên */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div>
+              <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <Users className="w-4 h-4 text-teal-600" />
+                Danh sách học sinh có mặt ({participants.length} bạn)
+              </h2>
+              <span className="text-xs text-slate-500">
+                Thầy/Cô có thể đổi tên, chuyển nhóm hoặc loại học sinh khỏi phòng
+              </span>
+            </div>
+            <div className="text-xs font-semibold text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200">
+              {participants.filter(p => p.isReady).length} / {participants.length} bạn đã Sẵn sàng
+            </div>
+          </div>
+
+          {participants.length === 0 ? (
+            <div className="text-center py-6 text-slate-400 text-xs">
+              Chưa có học sinh nào vào phòng. Hãy chia sẻ mã phòng hoặc chiếu mã QR!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {participants.map((p) => {
+                const av = getAvatarInfo(p.avatar);
+                const pGroup = groups.find(g => g.id === p.groupId);
+
+                return (
+                  <div key={p.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-2xl leading-none">{av.emoji}</span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-xs text-slate-800 block truncate">
+                          {p.nickname}
+                        </span>
+                        <span className="text-[10px] text-slate-500 block truncate">
+                          {pGroup?.name || 'Chưa nhóm'} • {p.isReady ? '✅ Sẵn sàng' : '⚪ Chưa'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => { setEditingParticipant(p); setNewParticipantName(p.nickname); }}
+                        className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800"
+                        title="Đổi tên"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => { setMovingParticipant(p); setTargetMoveGroupId(p.groupId); }}
+                        className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-sky-700"
+                        title="Chuyển nhóm"
+                      >
+                        <ArrowRightLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleManageParticipant(p.id, 'kick')}
+                        className="p-1 hover:bg-rose-100 rounded text-slate-400 hover:text-rose-600"
+                        title="Loại khỏi phòng"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Bảng tổng hợp phản ánh cá nhân cuối tiết */}
         {reflections.length > 0 && (
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
@@ -610,6 +713,75 @@ export default function TeacherRoomMonitor({ params }: { params: Promise<{ code:
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal đổi tên học sinh */}
+      {editingParticipant && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4">
+            <h3 className="text-sm font-bold text-slate-800">Đổi tên / biệt danh học sinh</h3>
+            <input
+              type="text"
+              value={newParticipantName}
+              onChange={(e) => setNewParticipantName(e.target.value)}
+              className="w-full px-3 py-2 text-sm border rounded-xl"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setEditingParticipant(null)}
+                className="px-3 py-1.5 text-xs text-slate-600 rounded-lg hover:bg-slate-100"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => {
+                  handleManageParticipant(editingParticipant.id, 'rename', { newName: newParticipantName });
+                  setEditingParticipant(null);
+                }}
+                className="px-4 py-1.5 text-xs bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg"
+              >
+                Lưu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal chuyển nhóm cho học sinh */}
+      {movingParticipant && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4">
+            <h3 className="text-sm font-bold text-slate-800">
+              Chuyển {movingParticipant.nickname} sang nhóm khác
+            </h3>
+            <select
+              value={targetMoveGroupId}
+              onChange={(e) => setTargetMoveGroupId(e.target.value)}
+              className="w-full px-3 py-2 text-sm border rounded-xl bg-white"
+            >
+              {groups.map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setMovingParticipant(null)}
+                className="px-3 py-1.5 text-xs text-slate-600 rounded-lg hover:bg-slate-100"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => {
+                  handleManageParticipant(movingParticipant.id, 'move_group', { targetGroupId: targetMoveGroupId });
+                  setMovingParticipant(null);
+                }}
+                className="px-4 py-1.5 text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg"
+              >
+                Chuyển nhóm
+              </button>
             </div>
           </div>
         </div>

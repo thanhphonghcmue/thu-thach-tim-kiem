@@ -3,145 +3,258 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
-import { User } from '@/types';
-import { QrCode, ArrowRight, AlertCircle, LogIn } from 'lucide-react';
+import AvatarPicker, { AVATARS } from '@/components/AvatarPicker';
+import { AvatarId, Room, Group } from '@/types';
+import { Sparkles, Users, ArrowRight, AlertCircle, QrCode } from 'lucide-react';
 
 function JoinContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialRoom = searchParams.get('room') || '';
+  const initialRoom = (searchParams.get('room') || '').toUpperCase();
 
-  const [roomCode, setRoomCode] = useState(initialRoom.toUpperCase());
-  const [user, setUser] = useState<User | null>(null);
+  const [roomCode, setRoomCode] = useState(initialRoom);
+  const [room, setRoom] = useState<Room | null>(null);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [checkingRoom, setCheckingRoom] = useState(false);
+
+  // Dữ liệu học sinh nhập
+  const [nickname, setNickname] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState<AvatarId>('cat');
+  const [selectedGroupId, setSelectedGroupId] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [joining, setJoining] = useState(false);
 
+  // Tự động kiểm tra phòng khi có mã phòng
   useEffect(() => {
-    const saved = localStorage.getItem('app_user');
-    if (saved) {
+    if (roomCode.trim().length >= 4) {
+      checkRoom(roomCode.trim().toUpperCase());
+    }
+  }, [roomCode]);
+
+  // Khôi phục phiên cũ nếu có
+  useEffect(() => {
+    if (roomCode) {
       try {
-        setUser(JSON.parse(saved));
+        const saved = localStorage.getItem(`student_session_${roomCode.toUpperCase()}`);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.nickname) setNickname(parsed.nickname);
+          if (parsed.avatar) setSelectedAvatar(parsed.avatar);
+          if (parsed.groupId) setSelectedGroupId(parsed.groupId);
+        }
       } catch (e) {}
     }
-  }, []);
+  }, [roomCode]);
+
+  const checkRoom = async (code: string) => {
+    try {
+      setCheckingRoom(true);
+      setError('');
+      const res = await fetch(`/api/rooms/${code}`);
+      const data = await res.json();
+      if (res.ok && data.room) {
+        setRoom(data.room);
+        setGroups(data.groups || []);
+        if (data.groups && data.groups.length > 0 && !selectedGroupId) {
+          setSelectedGroupId(data.groups[0].id);
+        }
+      } else {
+        setRoom(null);
+        setGroups([]);
+        if (code.length === 6) {
+          setError(data.error || 'Phòng thi không tồn tại hoặc đã đóng');
+        }
+      }
+    } catch (err) {
+      setRoom(null);
+    } finally {
+      setCheckingRoom(false);
+    }
+  };
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanCode = roomCode.trim().toUpperCase();
-    if (!cleanCode) return;
+    const cleanName = nickname.trim();
+
+    if (!cleanCode) {
+      setError('Vui lòng nhập mã phòng');
+      return;
+    }
+    if (!cleanName) {
+      setError('Vui lòng nhập tên hoặc biệt danh của bạn');
+      return;
+    }
 
     setError('');
-    setLoading(true);
+    setJoining(true);
 
     try {
-      // 1. Kiểm tra xem người dùng đã đăng nhập chưa
-      if (!user) {
-        // Chưa đăng nhập -> Chuyển sang login kèm returnUrl
-        router.push(`/login?role=student&returnUrl=${encodeURIComponent(`/join?room=${cleanCode}`)}`);
-        return;
-      }
+      const res = await fetch(`/api/rooms/${cleanCode}/join-fast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nickname: cleanName,
+          avatar: selectedAvatar,
+          groupId: selectedGroupId,
+        }),
+      });
 
-      // 2. Kiểm tra thông tin phòng
-      const res = await fetch(`/api/rooms/${cleanCode}?studentId=${user.id}`);
       const data = await res.json();
 
-      if (!res.ok || !data.room) {
-        setError(data.error || 'Phòng thi không tồn tại hoặc đã bị đóng');
-        setLoading(false);
+      if (!res.ok || !data.success) {
+        setError(data.error || 'Không thể vào phòng thi');
+        setJoining(false);
         return;
       }
 
-      const { room, groups } = data;
+      // Lưu hồ sơ tham gia vào localStorage theo phòng
+      const participant = data.participant;
+      localStorage.setItem(`student_session_${cleanCode}`, JSON.stringify(participant));
+      // Lưu tương thích cho các màn hình khác
+      localStorage.setItem('app_user', JSON.stringify({
+        id: participant.id,
+        role: 'student',
+        name: participant.nickname,
+        username: participant.nickname,
+        avatar: participant.avatar,
+        classId: data.room?.classId,
+      }));
 
-      // 3. Kiểm tra khóa người tham gia
-      if (room.isLocked) {
-        setError('Phòng thi đã bị giáo viên khóa tiếp nhận thành viên mới');
-        setLoading(false);
-        return;
-      }
-
-      // 4. Tìm nhóm của học sinh này trong phòng
-      const myGroup = groups.find((g: any) => g.studentIds.includes(user.id));
-      if (!myGroup && user.role === 'student') {
-        setError('Em chưa được phân vào nhóm nào trong phòng này. Hãy báo với Giáo viên!');
-        setLoading(false);
-        return;
-      }
-
-      // 5. Điều hướng theo trạng thái phòng
-      if (room.status === 'waiting') {
-        router.push(`/student/room/${cleanCode}/waiting`);
-      } else if (room.status === 'running' || room.status === 'paused') {
-        router.push(`/student/room/${cleanCode}/play`);
-      } else if (room.status === 'published' || room.status === 'closed') {
-        router.push(`/student/room/${cleanCode}/result`);
-      } else {
-        router.push(`/student/room/${cleanCode}/waiting`);
-      }
+      // Chuyển thẳng vào phòng chờ
+      router.push(`/student/room/${cleanCode}/waiting`);
     } catch (err: any) {
-      setError(err.message || 'Lỗi kết nối phòng');
+      setError(err.message || 'Lỗi kết nối máy chủ');
     } finally {
-      setLoading(false);
+      setJoining(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Header currentUser={user} />
+    <div className="min-h-screen bg-slate-50 flex flex-col pb-12">
+      <Header />
 
-      <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-xl p-6 sm:p-8">
-          <div className="text-center mb-6">
-            <div className="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mx-auto mb-3">
-              <QrCode className="w-6 h-6" />
+      <main className="flex-1 max-w-xl mx-auto px-4 sm:px-6 py-6 w-full flex flex-col justify-center">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
+          {/* Header thi đua */}
+          <div className="text-center space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+              Thử thách Tìm kiếm • Tin học 11
             </div>
-            <h2 className="text-xl font-black text-slate-800">Tham gia phòng học</h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Nhập mã phòng để kết nối cùng các bạn trong nhóm
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              Tham gia Trò chơi
+            </h1>
+            <p className="text-xs text-slate-500">
+              Không cần đăng ký phức tạp. Hãy chọn tên & avatar thật ngầu rồi vào phòng chờ nhé!
             </p>
           </div>
 
-          {!user && (
-            <div className="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2.5">
-              <LogIn className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
-              <div>
-                <span className="font-bold block">Chưa đăng nhập tài khoản học sinh:</span>
-                Sau khi nhấn Tham gia, em sẽ được chuyển tới trang đăng nhập và tự động quay lại phòng này.
-              </div>
-            </div>
-          )}
-
           {error && (
-            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleJoin} className="space-y-4">
+          <form onSubmit={handleJoin} className="space-y-5">
+            {/* 1. Mã phòng */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Mã phòng thi (6 ký tự):
+                Mã phòng thi:
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={roomCode}
+                  onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                  placeholder="VD: TIMKIEM"
+                  maxLength={8}
+                  required
+                  className="w-full text-center tracking-widest text-xl font-mono font-black uppercase px-4 py-3 border-2 border-slate-300 rounded-2xl focus:border-teal-500 focus:ring-4 focus:ring-teal-100 outline-none transition-all"
+                />
+                <QrCode className="w-5 h-5 text-slate-400 absolute right-3.5 top-3.5" />
+              </div>
+
+              {room && (
+                <div className="mt-2 p-2.5 rounded-xl bg-teal-50 border border-teal-200 text-xs text-teal-900 flex items-center justify-between">
+                  <span>Phòng: <strong>{room.name}</strong></span>
+                  <span className="font-semibold text-teal-700 bg-white px-2 py-0.5 rounded-md border border-teal-200 text-[11px]">
+                    {room.status === 'waiting' ? '🟢 Đang mở phòng chờ' : '🟡 ' + room.status}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Biệt danh của học sinh */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Tên hoặc biệt danh của bạn:
               </label>
               <input
                 type="text"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                placeholder="VD: TIMKIEM"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="VD: Minh Anh, Duy Long, Bé Thỏ..."
+                maxLength={25}
                 required
-                maxLength={8}
-                autoFocus
-                className="w-full text-center tracking-widest text-2xl font-mono font-black uppercase px-4 py-3 border-2 border-slate-300 rounded-xl focus:border-sky-500 focus:ring-4 focus:ring-sky-100 outline-none transition-all"
+                className="w-full px-4 py-3 text-base font-semibold border-2 border-slate-300 rounded-2xl focus:border-teal-500 focus:ring-4 focus:ring-teal-100 outline-none transition-all"
               />
+              <p className="text-[11px] text-slate-400 mt-1">
+                *Tên này sẽ hiển thị với Thầy/Cô và các bạn trên bảng xếp hạng.
+              </p>
             </div>
 
+            {/* 3. Chọn Avatar dễ thương */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-2">
+                Chọn Avatar yêu thích của bạn:
+              </label>
+              <AvatarPicker selected={selectedAvatar} onSelect={setSelectedAvatar} />
+            </div>
+
+            {/* 4. Chọn Nhóm (nếu phòng có chia nhóm) */}
+            {groups.length > 0 && (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-teal-600" />
+                  Chọn Nhóm của bạn:
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {groups.map((grp) => {
+                    const isSelected = selectedGroupId === grp.id;
+                    const memberCount = grp.studentIds?.length || 0;
+
+                    return (
+                      <button
+                        key={grp.id}
+                        type="button"
+                        onClick={() => setSelectedGroupId(grp.id)}
+                        className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-teal-50 border-teal-500 ring-2 ring-teal-200 font-bold text-teal-900 shadow-sm'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                        }`}
+                      >
+                        <span className="block text-xs font-extrabold">{grp.name}</span>
+                        <span className="text-[11px] text-slate-400 font-normal">
+                          {memberCount} bạn đang có mặt
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Nút vào phòng chờ */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-sky-600 to-teal-600 hover:from-sky-700 hover:to-teal-700 text-white font-bold text-sm rounded-xl shadow-md shadow-sky-600/20 flex items-center justify-center gap-2 transition-all"
+              disabled={joining || checkingRoom}
+              className="w-full py-3.5 bg-gradient-to-r from-teal-600 to-sky-600 hover:from-teal-700 hover:to-sky-700 text-white font-black text-base rounded-2xl shadow-lg shadow-teal-600/25 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
             >
-              {loading ? 'Đang kiểm tra phòng...' : 'Vào phòng ngay'}
-              <ArrowRight className="w-4 h-4" />
+              {joining ? 'Đang vào phòng...' : 'Vào phòng chờ ngay'}
+              <ArrowRight className="w-5 h-5" />
             </button>
           </form>
         </div>

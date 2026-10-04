@@ -3,7 +3,8 @@
 import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import QRCodeCard from '@/components/QRCodeCard';
-import { Room, LeaderboardEntry } from '@/types';
+import { Room, LeaderboardEntry, Participant } from '@/types';
+import { getAvatarInfo } from '@/components/AvatarPicker';
 import { Award, Tv, Users, ArrowLeft, Clock } from 'lucide-react';
 
 export default function ProjectorView({ params }: { params: Promise<{ code: string }> }) {
@@ -13,6 +14,7 @@ export default function ProjectorView({ params }: { params: Promise<{ code: stri
 
   const [room, setRoom] = useState<Room | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [currentTime, setCurrentTime] = useState('');
 
   useEffect(() => {
@@ -45,6 +47,7 @@ export default function ProjectorView({ params }: { params: Promise<{ code: stri
       if (data.room) {
         setRoom(data.room);
         setLeaderboard(data.leaderboard || []);
+        setParticipants(data.participants || []);
       }
     } catch (err) {
       console.error(err);
@@ -98,8 +101,31 @@ export default function ProjectorView({ params }: { params: Promise<{ code: stri
             <QRCodeCard roomCode={roomCode} />
           </div>
 
-          <div className="mt-4 text-xs text-slate-400">
-            Trạng thái phòng: <strong className="text-emerald-400 uppercase">{room?.status}</strong>
+          <div className="mt-4 text-xs text-slate-400 w-full text-left bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-bold text-slate-300">
+                👥 Đang có mặt: <strong className="text-teal-400">{participants.length}</strong> bạn
+              </span>
+              <span className="text-[11px] text-emerald-400 font-semibold">
+                {participants.filter(p => p.isReady).length} đã sẵn sàng ✓
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+              {participants.map((p) => {
+                const av = getAvatarInfo(p.avatar);
+                return (
+                  <span
+                    key={p.id}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-200"
+                  >
+                    <span>{av.emoji}</span>
+                    <span className="font-medium truncate max-w-[80px]">{p.nickname}</span>
+                    {p.isReady && <span className="text-emerald-400 font-bold">✓</span>}
+                  </span>
+                );
+              })}
+            </div>
           </div>
         </div>
 

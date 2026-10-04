@@ -107,14 +107,14 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg font-bold text-slate-800 mb-1">Dành cho Học sinh</h3>
               <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-                Đăng nhập bằng mã đăng nhập (VD: HS001, HS002...), vào nhóm làm bài trắc nghiệm và mô phỏng chạy tay nhị phân.
+                Quét mã QR hoặc nhập mã phòng, chọn biệt danh yêu thích và avatar dễ thương để vào phòng chờ ngay mà không cần tạo tài khoản!
               </p>
             </div>
             <Link
-              href="/login?role=student"
+              href="/join"
               className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors"
             >
-              Đăng nhập Học sinh
+              Vào phòng chờ ngay
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>

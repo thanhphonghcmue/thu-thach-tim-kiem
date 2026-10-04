@@ -75,10 +75,10 @@ test('Integration Test 3: Chống nộp bài lần 2 và chống sửa khi đã 
     student1Id,
     { 'mcq-1': 'opt-1-a' },
     {
-      steps: [{ stepNumber: 1, left: 0, right: 7, mid: 3, aMid: 12, comparison: '<', action: 'keep_right', newLeft: 4, newRight: 7 }],
-      finalIndex: 6,
-      checkCount: 3,
-      eliminationExplanation: 'Em thấy 12 bé hơn 38 nên bỏ nửa trước',
+      steps: [{ stepNumber: 1, left: 0, right: 4, mid: 2, aMid: 8, comparison: '<', action: 'keep_right', newLeft: 3, newRight: 4 }],
+      finalIndex: 3,
+      checkCount: 2,
+      eliminationExplanation: 'Em thấy 8 bé hơn 12 nên bỏ nửa trước',
     }
   );
 
@@ -104,10 +104,10 @@ test('Integration Test 4: Bằng điểm đồng hạng trên bảng xếp hạn
     student2Id,
     { 'mcq-1': 'opt-1-a' },
     {
-      steps: [{ stepNumber: 1, left: 0, right: 7, mid: 3, aMid: 12, comparison: '<', action: 'keep_right', newLeft: 4, newRight: 7 }],
-      finalIndex: 6,
-      checkCount: 3,
-      eliminationExplanation: 'Vì 12 < 38 nên loại bỏ phần đầu',
+      steps: [{ stepNumber: 1, left: 0, right: 4, mid: 2, aMid: 8, comparison: '<', action: 'keep_right', newLeft: 3, newRight: 4 }],
+      finalIndex: 3,
+      checkCount: 2,
+      eliminationExplanation: 'Vì 8 < 12 nên loại bỏ phần đầu',
     }
   );
   assert.equal(sub2.success, true);

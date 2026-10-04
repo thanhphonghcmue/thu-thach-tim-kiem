@@ -5,7 +5,7 @@ import { parseHandTraceText } from '../src/lib/parser';
 import { STANDARD_HAND_TRACE } from '../src/data/questions';
 import { HandTraceData } from '../src/types';
 
-test('1. Đáp án hoàn toàn đúng đạt 10/10 điểm', () => {
+test('1. Đáp án hoàn toàn đúng bài mới (A=[2,5,8,12,16], K=12) đạt 10/10 điểm', () => {
   const perfectMcq = {
     'mcq-1': 'opt-1-a',
     'mcq-2': 'opt-2-c',
@@ -19,40 +19,29 @@ test('1. Đáp án hoàn toàn đúng đạt 10/10 điểm', () => {
       {
         stepNumber: 1,
         left: 0,
-        right: 7,
-        mid: 3,
-        aMid: 12,
+        right: 4,
+        mid: 2,
+        aMid: 8,
         comparison: '<',
         action: 'keep_right',
-        newLeft: 4,
-        newRight: 7,
+        newLeft: 3,
+        newRight: 4,
       },
       {
         stepNumber: 2,
-        left: 4,
-        right: 7,
-        mid: 5,
-        aMid: 23,
-        comparison: '<',
-        action: 'keep_right',
-        newLeft: 6,
-        newRight: 7,
-      },
-      {
-        stepNumber: 3,
-        left: 6,
-        right: 7,
-        mid: 6,
-        aMid: 38,
+        left: 3,
+        right: 4,
+        mid: 3,
+        aMid: 12,
         comparison: '=',
         action: 'found',
         newLeft: '',
         newRight: '',
       },
     ],
-    finalIndex: 6,
-    checkCount: 3,
-    eliminationExplanation: 'Dãy tăng dần nên các phần tử từ 0 đến mid đều nhỏ hơn hoặc bằng A[mid] < K, loại nửa trái.',
+    finalIndex: 3,
+    checkCount: 2,
+    eliminationExplanation: 'Dãy tăng dần nên các phần tử từ 0 đến mid đều nhỏ hơn hoặc bằng 8 < 12, loại nửa trái.',
   };
 
   const selectedQuestions = ['mcq-1', 'mcq-2', 'mcq-3', 'mcq-4', 'mcq-5'];
@@ -61,199 +50,168 @@ test('1. Đáp án hoàn toàn đúng đạt 10/10 điểm', () => {
   assert.equal(score.mcqScore, 5.0, 'MCQ phải đạt 5.0');
   assert.equal(score.handScore, 5.0, 'Chạy tay phải đạt 5.0');
   assert.equal(score.totalScore, 10.0, 'Tổng điểm phải đạt 10.0');
-  assert.equal(score.pendingReviewScore, 0.0, 'Không còn điểm chờ duyệt');
+  assert.equal(score.handBreakdown.steps[0].stepTotal, 2.0, 'Bước 1 đạt 2.0/2.0');
+  assert.equal(score.handBreakdown.steps[1].stepTotal, 2.0, 'Bước 2 đạt 2.0/2.0');
+  assert.equal(score.handBreakdown.conclusion.indexPts + score.handBreakdown.conclusion.countPts, 1.0, 'Kết luận đạt 1.0/1.0');
 });
 
-test('2. Sai một trường chỉ mất điểm của đúng tiêu chí đó (không mất toàn bộ)', () => {
-  // Sai mid ở bước 1 (nhập mid=2 thay vì 3), các phần khác đúng
-  const handWithWrongMid: HandTraceData = {
-    steps: [
-      {
-        stepNumber: 1,
-        left: 0,
-        right: 7,
-        mid: 2, // SAI: -0.25đ
-        aMid: 12,
-        comparison: '<',
-        action: 'keep_right',
-        newLeft: 4,
-        newRight: 7,
-      },
-      {
-        stepNumber: 2,
-        left: 4,
-        right: 7,
-        mid: 5,
-        aMid: 23,
-        comparison: '<',
-        action: 'keep_right',
-        newLeft: 6,
-        newRight: 7,
-      },
-      {
-        stepNumber: 3,
-        left: 6,
-        right: 7,
-        mid: 6,
-        aMid: 38,
-        comparison: '=',
-        action: 'found',
-        newLeft: '',
-        newRight: '',
-      },
-    ],
-    finalIndex: 6,
-    checkCount: 3,
-    eliminationExplanation: 'Dãy tăng dần nên phần tử bên trái nhỏ hơn K.',
-  };
-
-  const breakdown = gradeHandTrace(handWithWrongMid);
-  const step1 = breakdown.steps[0];
-
-  assert.equal(step1.midCorrect, false, 'mid phải bị đánh dấu sai');
-  assert.equal(step1.midPts, 0, 'mid sai nhận 0đ');
-  assert.equal(step1.leftRightCorrect, true, 'left/right vẫn được điểm');
-  assert.equal(step1.leftRightPts, 0.25, 'left/right được 0.25');
-  assert.equal(step1.aMidCorrect, true, 'aMid được 0.25');
-  assert.equal(step1.stepTotal, 1.0, 'Bước 1 đạt 1.00 / 1.25');
-  assert.equal(breakdown.handTotal, 4.75, 'Tổng bài chạy tay đạt 4.75 / 5.00');
-});
-
-test('3. Sai bước 1, bước 2 đúng vẫn được trọn điểm bước 2', () => {
+test('2. Thang điểm chi tiết Bước 1 (Tổng 2.0 điểm: 4 tiêu chí x 0.5 điểm)', () => {
+  // Đúng left=0, right=4 (0.5đ); sai mid (nhập mid=1 thay vì 2); đúng so sánh/chọn bên phải (0.5đ); đúng cập nhật (0.5đ)
   const hand: HandTraceData = {
     steps: [
       {
         stepNumber: 1,
-        left: 1, // Sai
-        right: 5, // Sai
-        mid: 2, // Sai
-        aMid: 8, // Sai
-        comparison: '>', // Sai
-        action: 'keep_left', // Sai
-        newLeft: 1,
-        newRight: 2,
+        left: 0,
+        right: 4,
+        mid: 1, // SAI
+        aMid: 8, // ĐÚNG (0.25đ)
+        comparison: '<',
+        action: 'keep_right', // Cả hai đúng: 0.5đ
+        newLeft: 3,
+        newRight: 4, // Cả hai đúng: 0.5đ
       },
       {
         stepNumber: 2,
-        left: 4,
-        right: 7,
-        mid: 5,
-        aMid: 23,
-        comparison: '<',
-        action: 'keep_right',
-        newLeft: 6,
-        newRight: 7,
-      },
-      {
-        stepNumber: 3,
-        left: 6,
-        right: 7,
-        mid: 6,
-        aMid: 38,
+        left: 3,
+        right: 4,
+        mid: 3,
+        aMid: 12,
         comparison: '=',
         action: 'found',
         newLeft: '',
         newRight: '',
       },
     ],
-    finalIndex: 6,
-    checkCount: 3,
-    eliminationExplanation: 'Dãy tăng dần nên bên trái nhỏ hơn K.',
+    finalIndex: 3,
+    checkCount: 2,
+    eliminationExplanation: '',
+  };
+
+  const breakdown = gradeHandTrace(hand);
+  const step1 = breakdown.steps[0];
+
+  assert.equal(step1.leftRightCorrect, true);
+  assert.equal(step1.leftRightPts, 0.5);
+  assert.equal(step1.midCorrect, false);
+  assert.equal(step1.midPts, 0);
+  assert.equal(step1.aMidCorrect, true);
+  assert.equal(step1.aMidPts, 0.25);
+  assert.equal(step1.comparisonCorrect, true);
+  assert.equal(step1.comparisonPts, 0.5);
+  assert.equal(step1.actionCorrect, true);
+  assert.equal(step1.actionPts, 0.5);
+  assert.equal(step1.stepTotal, 1.75, 'Bước 1 đạt 1.75 / 2.0');
+});
+
+test('3. Sai bước 1 vẫn chấm bước 2 bình thường và đạt trọn 2.0 điểm', () => {
+  const hand: HandTraceData = {
+    steps: [
+      {
+        stepNumber: 1,
+        left: 99, // Sai toàn bộ
+        right: 99,
+        mid: 99,
+        aMid: 99,
+        comparison: '>',
+        action: 'keep_left',
+        newLeft: 99,
+        newRight: 99,
+      },
+      {
+        stepNumber: 2,
+        left: 3, // Đúng
+        right: 4, // Đúng
+        mid: 3, // Đúng
+        aMid: 12, // Đúng
+        comparison: '=', // Đúng
+        action: 'found', // Đúng
+        newLeft: '',
+        newRight: '',
+      },
+    ],
+    finalIndex: 3,
+    checkCount: 2,
+    eliminationExplanation: '',
   };
 
   const breakdown = gradeHandTrace(hand);
   assert.equal(breakdown.steps[0].stepTotal, 0, 'Bước 1 sai hết nhận 0đ');
-  assert.equal(breakdown.steps[1].stepTotal, 1.25, 'Bước 2 chuẩn đáp án nhận đủ 1.25đ');
+  assert.equal(breakdown.steps[1].stepTotal, 2.0, 'Bước 2 đúng toàn bộ nhận đủ 2.0đ');
+  assert.equal(breakdown.steps[1].leftRightPts, 0.5);
+  assert.equal(breakdown.steps[1].midValPts, 0.5);
+  assert.equal(breakdown.steps[1].comparisonPts, 0.5);
+  assert.equal(breakdown.steps[1].actionPts, 0.5);
 });
 
-test('4. Phân biệt "giữ nửa phải" và "bỏ nửa phải" hoặc phủ định', () => {
-  const stepKeepRight: any = {
-    stepNumber: 1,
-    left: 0,
-    right: 7,
-    mid: 3,
-    aMid: 12,
-    comparison: '<',
-    action: 'keep_right', // Đúng
-    newLeft: 4,
-    newRight: 7,
-  };
-  const stepDiscardRight: any = {
-    stepNumber: 1,
-    left: 0,
-    right: 7,
-    mid: 3,
-    aMid: 12,
-    comparison: '<',
-    action: 'keep_left', // SAI (bỏ nửa phải = giữ nửa trái)
-    newLeft: 4,
-    newRight: 7,
-  };
-
-  const b1 = gradeHandTrace({ steps: [stepKeepRight], finalIndex: '', checkCount: '', eliminationExplanation: '' });
-  const b2 = gradeHandTrace({ steps: [stepDiscardRight], finalIndex: '', checkCount: '', eliminationExplanation: '' });
-
-  assert.equal(b1.steps[0].actionCorrect, true, 'Giữ nửa phải là đúng');
-  assert.equal(b2.steps[0].actionCorrect, false, 'Bỏ nửa phải / giữ nửa trái là sai');
-});
-
-test('5. Không nhầm chỉ số 6 với giá trị 38 hoặc số lần 3', () => {
-  const handWrongIndex: HandTraceData = {
+test('4. Phân biệt rõ: 12 là giá trị, 3 là chỉ số, 2 là số lần kiểm tra', () => {
+  // Học sinh nhầm lẫn nhập 12 vào chỉ số
+  const handConfused: HandTraceData = {
     steps: [],
-    finalIndex: 38, // Nhầm giá trị với chỉ số
-    checkCount: 6,  // Nhầm chỉ số với số lần kiểm tra
+    finalIndex: 12, // Nhầm giá trị K=12 với chỉ số (chuẩn là 3)
+    checkCount: 3,  // Nhầm chỉ số 3 với số lần kiểm tra (chuẩn là 2)
     eliminationExplanation: '',
   };
 
-  const breakdown = gradeHandTrace(handWrongIndex);
-  assert.equal(breakdown.conclusion.indexCorrect, false, 'finalIndex 38 không được chấm đúng');
+  const breakdown = gradeHandTrace(handConfused);
+  assert.equal(breakdown.conclusion.indexCorrect, false, 'Chỉ số 12 phải bị chấm sai');
   assert.equal(breakdown.conclusion.indexPts, 0);
-  assert.equal(breakdown.conclusion.countCorrect, false, 'checkCount 6 không được chấm đúng');
+  assert.equal(breakdown.conclusion.countCorrect, false, 'Số lần 3 phải bị chấm sai (chuẩn là 2)');
   assert.equal(breakdown.conclusion.countPts, 0);
 });
 
-test('6. Bước tìm thấy không bắt buộc nhập phạm vi mới', () => {
-  const step3: any = {
-    stepNumber: 3,
-    left: 6,
-    right: 7,
-    mid: 6,
-    aMid: 38,
+test('5. Kết luận đúng chỉ số 3 (0.5đ) và số lần 2 (0.5đ) nhận đủ 1.0 điểm', () => {
+  const handCorrect: HandTraceData = {
+    steps: [],
+    finalIndex: 3,
+    checkCount: 2,
+    eliminationExplanation: '',
+  };
+
+  const breakdown = gradeHandTrace(handCorrect);
+  assert.equal(breakdown.conclusion.indexCorrect, true);
+  assert.equal(breakdown.conclusion.indexPts, 0.5);
+  assert.equal(breakdown.conclusion.countCorrect, true);
+  assert.equal(breakdown.conclusion.countPts, 0.5);
+});
+
+test('6. Bước 2 tìm thấy và dừng không bắt buộc nhập phạm vi mới', () => {
+  const step2: any = {
+    stepNumber: 2,
+    left: 3,
+    right: 4,
+    mid: 3,
+    aMid: 12,
     comparison: '=',
     action: 'found',
-    newLeft: '', // Không nhập newLeft/newRight vì đã tìm thấy
+    newLeft: '',
     newRight: '',
   };
 
-  const breakdown = gradeHandTrace({ steps: [step3], finalIndex: 6, checkCount: 3, eliminationExplanation: '' });
-  assert.equal(breakdown.steps[2].actionCorrect, true, 'Bước tìm thấy không yêu cầu newLeft/newRight');
-  assert.equal(breakdown.steps[2].actionPts, 0.25);
+  const breakdown = gradeHandTrace({ steps: [step2], finalIndex: 3, checkCount: 2, eliminationExplanation: '' });
+  assert.equal(breakdown.steps[1].actionCorrect, true, 'Bước tìm thấy nhận đủ điểm dừng');
+  assert.equal(breakdown.steps[1].actionPts, 0.5);
 });
 
-test('7. Diễn đạt tự do chưa chắc chắn được đánh dấu Cần giáo viên duyệt', () => {
-  const res = evaluateExplanation('Em thấy 12 nhỏ hơn 38 nên bỏ các số phía trước');
-  assert.equal(res.status, 'pending_teacher_review', 'Phải chuyển sang pending_teacher_review');
-  assert.equal(res.pts, 0, 'Chưa cộng điểm tự động');
-
-  const emptyRes = evaluateExplanation('');
-  assert.equal(emptyRes.status, 'rejected', 'Bỏ trống bị từ chối');
-});
-
-test('8. Parser phân tích chuỗi văn bản nhận diện l, r, m, a_mid và các dấu', () => {
+test('7. Parser nhận diện nhật kí văn bản đề mới (2 bước, K=12, chỉ số 3, kiểm tra 2 lần)', () => {
   const text = `
-    B1: l=0, r=7, m=3, A[m]=12; 12<38; giữ nửa phải; l=4, r=7
-    B2: l=4, r=7, m=5, A[m]=23; 23 < 38; giữ nửa phải; l=6, r=7
-    B3: l=6, r=7, m=6, A[m]=38; 38=38; tìm thấy
-    Kết quả: chỉ số 6, kiểm tra 3 lần
-    Giải thích: vì dãy tăng dần nên mọi phần tử bên trái đều nhỏ hơn 38
+    B1: l=0, r=4, m=2, A[m]=8; 8<12; tìm tiếp bên phải; l=3, r=4
+    B2: l=3, r=4, m=3, A[m]=12; 12=12; tìm thấy
+    Kết quả: chỉ số 3, kiểm tra 2 lần
+    Giải thích: vì dãy tăng dần nên mọi phần tử bên trái đều nhỏ hơn 12
   `;
 
   const { data } = parseHandTraceText(text);
-  assert.equal(data.steps.length, 3, 'Phải parse được 3 bước');
+  assert.equal(data.steps.length, 2, 'Phải parse được 2 bước');
   assert.equal(data.steps[0].left, '0');
-  assert.equal(data.steps[0].mid, '3');
-  assert.equal(data.steps[0].aMid, '12');
+  assert.equal(data.steps[0].right, '4');
+  assert.equal(data.steps[0].mid, '2');
+  assert.equal(data.steps[0].aMid, '8');
   assert.equal(data.steps[0].action, 'keep_right');
-  assert.equal(data.finalIndex, '6');
-  assert.equal(data.checkCount, '3');
+  assert.equal(data.steps[1].left, '3');
+  assert.equal(data.steps[1].right, '4');
+  assert.equal(data.steps[1].mid, '3');
+  assert.equal(data.steps[1].aMid, '12');
+  assert.equal(data.steps[1].action, 'found');
+  assert.equal(data.finalIndex, '3');
+  assert.equal(data.checkCount, '2');
 });

@@ -46,10 +46,10 @@ export default function HandTraceTextView({
           <FileText className="w-4 h-4 text-sky-600" />
           Quy cách viết nhật kí văn bản:
         </span>
-        <p>• Dòng bước: <code>B1: l=0, r=7, m=3, A[m]=12; 12&lt;38; giữ nửa phải; l=4, r=7</code></p>
-        <p>• Bước tìm thấy: <code>B3: l=6, r=7, m=6, A[m]=38; 38=38; tìm thấy</code></p>
-        <p>• Dòng kết luận: <code>Kết quả: chỉ số 6, kiểm tra 3 lần</code></p>
-        <p>• Dòng giải thích: <code>Giải thích: vì dãy tăng dần nên loại nửa trái...</code></p>
+        <p>• Dòng Bước 1: <code>B1: l=0, r=4, m=2, A[m]=8; 8&lt;12; tìm tiếp bên phải; l=3, r=4</code></p>
+        <p>• Dòng Bước 2: <code>B2: l=3, r=4, m=3, A[m]=12; 12=12; tìm thấy</code></p>
+        <p>• Dòng kết luận: <code>Kết quả: chỉ số 3, kiểm tra 2 lần</code></p>
+        <p className="text-[11px] text-sky-800 italic mt-1">*Phân biệt rõ: 12 là giá trị, 3 là chỉ số, 2 là số lần kiểm tra.</p>
       </div>
 
       <div className="space-y-2">

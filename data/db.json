@@ -246,7 +246,7 @@
       "teacherId": "teacher-gv01",
       "classId": "class-11a1",
       "name": "Thử thách Tìm kiếm - Tiết 2 Luyện tập",
-      "status": "waiting",
+      "status": "running",
       "selectedQuestionIds": [
         "mcq-1",
         "mcq-2",
@@ -258,7 +258,8 @@
       "remainingSeconds": 540,
       "isLocked": false,
       "isRevisionOpen": false,
-      "createdAt": "2026-10-04T10:44:51.638Z"
+      "createdAt": "2026-10-04T10:44:51.638Z",
+      "startedAt": "2026-10-04T11:18:39.741Z"
     },
     "room-1791111173920": {
       "id": "room-1791111173920",
@@ -459,6 +460,86 @@
       "isLocked": false,
       "isRevisionOpen": false,
       "createdAt": "2026-10-04T11:15:25.226Z"
+    },
+    "room-1791113501985": {
+      "id": "room-1791113501985",
+      "code": "FZ3B5T",
+      "teacherId": "teacher-gv01",
+      "classId": "class-11a1",
+      "name": "Phòng Fast Join Cá Nhân 1791113501985",
+      "status": "waiting",
+      "selectedQuestionIds": [
+        "mcq-1",
+        "mcq-2",
+        "mcq-3",
+        "mcq-4",
+        "mcq-5"
+      ],
+      "timeLimitMinutes": 9,
+      "remainingSeconds": 540,
+      "isLocked": false,
+      "isRevisionOpen": false,
+      "createdAt": "2026-10-04T11:31:41.985Z"
+    },
+    "room-1791113502010": {
+      "id": "room-1791113502010",
+      "code": "VQX5XX",
+      "teacherId": "teacher-gv01",
+      "classId": "class-11a1",
+      "name": "Phòng Test Cá Nhân 1791113502010",
+      "status": "running",
+      "selectedQuestionIds": [
+        "mcq-1",
+        "mcq-2",
+        "mcq-3",
+        "mcq-4",
+        "mcq-5"
+      ],
+      "timeLimitMinutes": 9,
+      "remainingSeconds": 540,
+      "isLocked": false,
+      "isRevisionOpen": false,
+      "createdAt": "2026-10-04T11:31:42.010Z"
+    },
+    "room-1791113519344": {
+      "id": "room-1791113519344",
+      "code": "AMBY2P",
+      "teacherId": "teacher-gv01",
+      "classId": "class-11a1",
+      "name": "Phòng Fast Join Cá Nhân 1791113519344",
+      "status": "waiting",
+      "selectedQuestionIds": [
+        "mcq-1",
+        "mcq-2",
+        "mcq-3",
+        "mcq-4",
+        "mcq-5"
+      ],
+      "timeLimitMinutes": 9,
+      "remainingSeconds": 540,
+      "isLocked": false,
+      "isRevisionOpen": false,
+      "createdAt": "2026-10-04T11:31:59.344Z"
+    },
+    "room-1791113519390": {
+      "id": "room-1791113519390",
+      "code": "TAST86",
+      "teacherId": "teacher-gv01",
+      "classId": "class-11a1",
+      "name": "Phòng Test Cá Nhân 1791113519390",
+      "status": "running",
+      "selectedQuestionIds": [
+        "mcq-1",
+        "mcq-2",
+        "mcq-3",
+        "mcq-4",
+        "mcq-5"
+      ],
+      "timeLimitMinutes": 9,
+      "remainingSeconds": 540,
+      "isLocked": false,
+      "isRevisionOpen": false,
+      "createdAt": "2026-10-04T11:31:59.390Z"
     }
   },
   "groups": {
@@ -1330,6 +1411,234 @@
         "student-12": "recorder_explainer"
       },
       "lastSyncedAt": "2026-10-04T11:15:25.227Z"
+    },
+    "group-room-1791113501985-1": {
+      "id": "group-room-1791113501985-1",
+      "roomId": "room-1791113501985",
+      "name": "Nhóm 1",
+      "studentIds": [
+        "student-1",
+        "student-4",
+        "student-7",
+        "student-10"
+      ],
+      "driverStudentId": "student-1",
+      "memberRoles": {
+        "student-1": "driver",
+        "student-4": "index_calculator",
+        "student-7": "verifier",
+        "student-10": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:41.986Z"
+    },
+    "group-room-1791113501985-2": {
+      "id": "group-room-1791113501985-2",
+      "roomId": "room-1791113501985",
+      "name": "Nhóm 2",
+      "studentIds": [
+        "student-2",
+        "student-5",
+        "student-8",
+        "student-11"
+      ],
+      "driverStudentId": "student-2",
+      "memberRoles": {
+        "student-2": "driver",
+        "student-5": "index_calculator",
+        "student-8": "verifier",
+        "student-11": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:41.986Z"
+    },
+    "group-room-1791113501985-3": {
+      "id": "group-room-1791113501985-3",
+      "roomId": "room-1791113501985",
+      "name": "Nhóm 3",
+      "studentIds": [
+        "student-3",
+        "student-6",
+        "student-9",
+        "student-12"
+      ],
+      "driverStudentId": "student-3",
+      "memberRoles": {
+        "student-3": "driver",
+        "student-6": "index_calculator",
+        "student-9": "verifier",
+        "student-12": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:41.986Z"
+    },
+    "group-room-1791113502010-1": {
+      "id": "group-room-1791113502010-1",
+      "roomId": "room-1791113502010",
+      "name": "Nhóm 1",
+      "studentIds": [
+        "student-1",
+        "student-4",
+        "student-7",
+        "student-10"
+      ],
+      "driverStudentId": "student-1",
+      "memberRoles": {
+        "student-1": "driver",
+        "student-4": "index_calculator",
+        "student-7": "verifier",
+        "student-10": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:42.011Z"
+    },
+    "group-room-1791113502010-2": {
+      "id": "group-room-1791113502010-2",
+      "roomId": "room-1791113502010",
+      "name": "Nhóm 2",
+      "studentIds": [
+        "student-2",
+        "student-5",
+        "student-8",
+        "student-11"
+      ],
+      "driverStudentId": "student-2",
+      "memberRoles": {
+        "student-2": "driver",
+        "student-5": "index_calculator",
+        "student-8": "verifier",
+        "student-11": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:42.011Z"
+    },
+    "group-room-1791113502010-3": {
+      "id": "group-room-1791113502010-3",
+      "roomId": "room-1791113502010",
+      "name": "Nhóm 3",
+      "studentIds": [
+        "student-3",
+        "student-6",
+        "student-9",
+        "student-12"
+      ],
+      "driverStudentId": "student-3",
+      "memberRoles": {
+        "student-3": "driver",
+        "student-6": "index_calculator",
+        "student-9": "verifier",
+        "student-12": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:42.011Z"
+    },
+    "group-room-1791113519344-1": {
+      "id": "group-room-1791113519344-1",
+      "roomId": "room-1791113519344",
+      "name": "Nhóm 1",
+      "studentIds": [
+        "student-1",
+        "student-4",
+        "student-7",
+        "student-10"
+      ],
+      "driverStudentId": "student-1",
+      "memberRoles": {
+        "student-1": "driver",
+        "student-4": "index_calculator",
+        "student-7": "verifier",
+        "student-10": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:59.344Z"
+    },
+    "group-room-1791113519344-2": {
+      "id": "group-room-1791113519344-2",
+      "roomId": "room-1791113519344",
+      "name": "Nhóm 2",
+      "studentIds": [
+        "student-2",
+        "student-5",
+        "student-8",
+        "student-11"
+      ],
+      "driverStudentId": "student-2",
+      "memberRoles": {
+        "student-2": "driver",
+        "student-5": "index_calculator",
+        "student-8": "verifier",
+        "student-11": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:59.344Z"
+    },
+    "group-room-1791113519344-3": {
+      "id": "group-room-1791113519344-3",
+      "roomId": "room-1791113519344",
+      "name": "Nhóm 3",
+      "studentIds": [
+        "student-3",
+        "student-6",
+        "student-9",
+        "student-12"
+      ],
+      "driverStudentId": "student-3",
+      "memberRoles": {
+        "student-3": "driver",
+        "student-6": "index_calculator",
+        "student-9": "verifier",
+        "student-12": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:59.344Z"
+    },
+    "group-room-1791113519390-1": {
+      "id": "group-room-1791113519390-1",
+      "roomId": "room-1791113519390",
+      "name": "Nhóm 1",
+      "studentIds": [
+        "student-1",
+        "student-4",
+        "student-7",
+        "student-10"
+      ],
+      "driverStudentId": "student-1",
+      "memberRoles": {
+        "student-1": "driver",
+        "student-4": "index_calculator",
+        "student-7": "verifier",
+        "student-10": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:59.391Z"
+    },
+    "group-room-1791113519390-2": {
+      "id": "group-room-1791113519390-2",
+      "roomId": "room-1791113519390",
+      "name": "Nhóm 2",
+      "studentIds": [
+        "student-2",
+        "student-5",
+        "student-8",
+        "student-11"
+      ],
+      "driverStudentId": "student-2",
+      "memberRoles": {
+        "student-2": "driver",
+        "student-5": "index_calculator",
+        "student-8": "verifier",
+        "student-11": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:59.391Z"
+    },
+    "group-room-1791113519390-3": {
+      "id": "group-room-1791113519390-3",
+      "roomId": "room-1791113519390",
+      "name": "Nhóm 3",
+      "studentIds": [
+        "student-3",
+        "student-6",
+        "student-9",
+        "student-12"
+      ],
+      "driverStudentId": "student-3",
+      "memberRoles": {
+        "student-3": "driver",
+        "student-6": "index_calculator",
+        "student-9": "verifier",
+        "student-12": "recorder_explainer"
+      },
+      "lastSyncedAt": "2026-10-04T11:31:59.391Z"
     }
   },
   "drafts": {
@@ -3610,6 +3919,927 @@
       "activeQuestionIndex": 0,
       "updatedAt": "2026-10-04T11:15:25.236Z",
       "version": 2
+    },
+    "p-1791112709273-4674": {
+      "participantId": "p-1791112709273-4674",
+      "mcqAnswers": {
+        "mcq-1": "opt-1-b"
+      },
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 3,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:18:42.561Z",
+      "version": 2
+    },
+    "group-room-1791113501985-1": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-1",
+      "updatedAt": "2026-10-04T11:31:41.986Z",
+      "version": 1
+    },
+    "group-room-1791113501985-2": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-2",
+      "updatedAt": "2026-10-04T11:31:41.986Z",
+      "version": 1
+    },
+    "group-room-1791113501985-3": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-3",
+      "updatedAt": "2026-10-04T11:31:41.986Z",
+      "version": 1
+    },
+    "p-1791113501989-2692": {
+      "participantId": "p-1791113501989-2692",
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:41.989Z",
+      "version": 1
+    },
+    "p-1791113501991-1880": {
+      "participantId": "p-1791113501991-1880",
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:41.991Z",
+      "version": 1
+    },
+    "p-1791113501994-1254": {
+      "participantId": "p-1791113501994-1254",
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:41.994Z",
+      "version": 1
+    },
+    "p-1791113501996-7774": {
+      "participantId": "p-1791113501996-7774",
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:41.996Z",
+      "version": 1
+    },
+    "group-room-1791113502010-1": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-1",
+      "updatedAt": "2026-10-04T11:31:42.011Z",
+      "version": 1
+    },
+    "group-room-1791113502010-2": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-2",
+      "updatedAt": "2026-10-04T11:31:42.011Z",
+      "version": 1
+    },
+    "group-room-1791113502010-3": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-3",
+      "updatedAt": "2026-10-04T11:31:42.011Z",
+      "version": 1
+    },
+    "p-1791113502015-5213": {
+      "participantId": "p-1791113502015-5213",
+      "mcqAnswers": {
+        "mcq-1": "opt-1-a"
+      },
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:42.019Z",
+      "version": 2
+    },
+    "p-1791113502016-727": {
+      "participantId": "p-1791113502016-727",
+      "mcqAnswers": {
+        "mcq-1": "opt-1-b"
+      },
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:42.021Z",
+      "version": 2
+    },
+    "group-room-1791113519344-1": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-1",
+      "updatedAt": "2026-10-04T11:31:59.344Z",
+      "version": 1
+    },
+    "group-room-1791113519344-2": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-2",
+      "updatedAt": "2026-10-04T11:31:59.344Z",
+      "version": 1
+    },
+    "group-room-1791113519344-3": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-3",
+      "updatedAt": "2026-10-04T11:31:59.344Z",
+      "version": 1
+    },
+    "p-1791113519348-4806": {
+      "participantId": "p-1791113519348-4806",
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:59.348Z",
+      "version": 1
+    },
+    "p-1791113519350-5587": {
+      "participantId": "p-1791113519350-5587",
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:59.350Z",
+      "version": 1
+    },
+    "p-1791113519351-6121": {
+      "participantId": "p-1791113519351-6121",
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:59.351Z",
+      "version": 1
+    },
+    "p-1791113519353-3374": {
+      "participantId": "p-1791113519353-3374",
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:59.353Z",
+      "version": 1
+    },
+    "group-room-1791113519390-1": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-1",
+      "updatedAt": "2026-10-04T11:31:59.391Z",
+      "version": 1
+    },
+    "group-room-1791113519390-2": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-2",
+      "updatedAt": "2026-10-04T11:31:59.391Z",
+      "version": 1
+    },
+    "group-room-1791113519390-3": {
+      "mcqAnswers": {},
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedBy": "student-3",
+      "updatedAt": "2026-10-04T11:31:59.391Z",
+      "version": 1
+    },
+    "p-1791113519394-3642": {
+      "participantId": "p-1791113519394-3642",
+      "mcqAnswers": {
+        "mcq-1": "opt-1-a"
+      },
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:59.400Z",
+      "version": 2
+    },
+    "p-1791113519396-1797": {
+      "participantId": "p-1791113519396-1797",
+      "mcqAnswers": {
+        "mcq-1": "opt-1-b"
+      },
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          },
+          {
+            "stepNumber": 2,
+            "left": "",
+            "right": "",
+            "mid": "",
+            "aMid": "",
+            "comparison": "",
+            "action": "",
+            "newLeft": "",
+            "newRight": ""
+          }
+        ],
+        "finalIndex": "",
+        "checkCount": "",
+        "eliminationExplanation": ""
+      },
+      "activeQuestionIndex": 0,
+      "updatedAt": "2026-10-04T11:31:59.402Z",
+      "version": 2
     }
   },
   "submissions": {
@@ -5219,6 +6449,532 @@
         }
       },
       "isRevised": false
+    },
+    "p-1791113502015-5213": {
+      "id": "sub-p-1791113502015-5213-1791113502023",
+      "roomId": "room-1791113502010",
+      "participantId": "p-1791113502015-5213",
+      "groupId": "p-1791113502015-5213",
+      "nickname": "An Nhiên",
+      "avatar": "cat",
+      "mcqAnswers": {
+        "mcq-1": "opt-1-a"
+      },
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": 0,
+            "right": 4,
+            "mid": 2,
+            "aMid": 8,
+            "comparison": "<",
+            "action": "keep_right",
+            "newLeft": 3,
+            "newRight": 4
+          }
+        ],
+        "finalIndex": 3,
+        "checkCount": 2,
+        "eliminationExplanation": "Em thấy 8 bé hơn 12 nên bỏ nửa trước"
+      },
+      "submittedAt": "2026-10-04T11:31:42.023Z",
+      "submittedBy": "p-1791113502015-5213",
+      "version": 1,
+      "score": {
+        "mcqScore": 1,
+        "handScore": 3.5,
+        "totalScore": 4.5,
+        "pendingReviewScore": 0,
+        "mcqBreakdown": {
+          "mcq-1": {
+            "isCorrect": true,
+            "points": 1,
+            "selectedOptionId": "opt-1-a",
+            "correctOptionId": "opt-1-a",
+            "explanation": "Thứ tự tăng dần cho phép xác định phía có thể chứa K. Dãy giảm dần cần thay đổi quy tắc so sánh; mã của bài này dùng dãy tăng dần."
+          },
+          "mcq-2": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-2-c",
+            "explanation": "9 là giá trị cần tìm, 5 là chỉ số (index), 6 là số lần kiểm tra từ đầu."
+          },
+          "mcq-3": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-3-b",
+            "explanation": "Các phần tử từ left đến mid không thể bằng K; loại cả mid và tiếp tục tìm ở phía bên phải."
+          },
+          "mcq-4": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-4-b",
+            "explanation": "left > right nghĩa là phạm vi rỗng. Khi left = right vẫn còn một phần tử cần kiểm tra."
+          },
+          "mcq-5": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-5-a",
+            "explanation": "Tuần tự gặp 2 ngay ở đầu (1 lần). Nhị phân xét 12 -> 5 -> 2 (3 lần). Không khẳng định nhị phân luôn ít lượt hơn trong mọi lần tìm."
+          }
+        },
+        "handBreakdown": {
+          "steps": [
+            {
+              "stepNumber": 1,
+              "leftRightCorrect": true,
+              "leftRightPts": 0.5,
+              "midCorrect": true,
+              "midPts": 0.25,
+              "aMidCorrect": true,
+              "aMidPts": 0.25,
+              "midValCorrect": true,
+              "midValPts": 0.5,
+              "comparisonCorrect": true,
+              "comparisonPts": 0.5,
+              "actionCorrect": true,
+              "actionPts": 0.5,
+              "stepTotal": 2,
+              "feedback": []
+            },
+            {
+              "stepNumber": 2,
+              "leftRightCorrect": false,
+              "leftRightPts": 0,
+              "midCorrect": false,
+              "midPts": 0,
+              "aMidCorrect": false,
+              "aMidPts": 0,
+              "midValCorrect": false,
+              "midValPts": 0,
+              "comparisonCorrect": false,
+              "comparisonPts": 0,
+              "actionCorrect": false,
+              "actionPts": 0,
+              "stepTotal": 0,
+              "feedback": [
+                "Chưa có dữ liệu cho bước 2"
+              ]
+            }
+          ],
+          "conclusion": {
+            "indexCorrect": true,
+            "indexPts": 0.5,
+            "countCorrect": true,
+            "countPts": 0.5,
+            "explanationStatus": "accepted",
+            "explanationPts": 0.5,
+            "explanationFeedback": "Diễn đạt tự do có liên quan, đánh dấu để Giáo viên theo dõi."
+          },
+          "handTotal": 3,
+          "pendingReviewScore": 0
+        },
+        "teacherAdjustments": [
+          {
+            "criterion": "explanation",
+            "originalPts": 0,
+            "adjustedPts": 0.5,
+            "reason": "Giải thích đúng bản chất dãy tăng dần",
+            "adjustedAt": "2026-10-04T11:31:42.034Z"
+          }
+        ]
+      },
+      "isRevised": false
+    },
+    "p-1791113502016-727": {
+      "id": "sub-p-1791113502016-727-1791113502025",
+      "roomId": "room-1791113502010",
+      "participantId": "p-1791113502016-727",
+      "groupId": "p-1791113502016-727",
+      "nickname": "Bảo Long",
+      "avatar": "dino",
+      "mcqAnswers": {
+        "mcq-1": "opt-1-a"
+      },
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": 0,
+            "right": 4,
+            "mid": 2,
+            "aMid": 8,
+            "comparison": "<",
+            "action": "keep_right",
+            "newLeft": 3,
+            "newRight": 4
+          }
+        ],
+        "finalIndex": 3,
+        "checkCount": 2,
+        "eliminationExplanation": "Vì 8 < 12 nên loại bỏ phần đầu"
+      },
+      "submittedAt": "2026-10-04T11:31:42.025Z",
+      "submittedBy": "p-1791113502016-727",
+      "version": 1,
+      "score": {
+        "mcqScore": 1,
+        "handScore": 3,
+        "totalScore": 4,
+        "pendingReviewScore": 0,
+        "mcqBreakdown": {
+          "mcq-1": {
+            "isCorrect": true,
+            "points": 1,
+            "selectedOptionId": "opt-1-a",
+            "correctOptionId": "opt-1-a",
+            "explanation": "Thứ tự tăng dần cho phép xác định phía có thể chứa K. Dãy giảm dần cần thay đổi quy tắc so sánh; mã của bài này dùng dãy tăng dần."
+          },
+          "mcq-2": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-2-c",
+            "explanation": "9 là giá trị cần tìm, 5 là chỉ số (index), 6 là số lần kiểm tra từ đầu."
+          },
+          "mcq-3": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-3-b",
+            "explanation": "Các phần tử từ left đến mid không thể bằng K; loại cả mid và tiếp tục tìm ở phía bên phải."
+          },
+          "mcq-4": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-4-b",
+            "explanation": "left > right nghĩa là phạm vi rỗng. Khi left = right vẫn còn một phần tử cần kiểm tra."
+          },
+          "mcq-5": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-5-a",
+            "explanation": "Tuần tự gặp 2 ngay ở đầu (1 lần). Nhị phân xét 12 -> 5 -> 2 (3 lần). Không khẳng định nhị phân luôn ít lượt hơn trong mọi lần tìm."
+          }
+        },
+        "handBreakdown": {
+          "steps": [
+            {
+              "stepNumber": 1,
+              "leftRightCorrect": true,
+              "leftRightPts": 0.5,
+              "midCorrect": true,
+              "midPts": 0.25,
+              "aMidCorrect": true,
+              "aMidPts": 0.25,
+              "midValCorrect": true,
+              "midValPts": 0.5,
+              "comparisonCorrect": true,
+              "comparisonPts": 0.5,
+              "actionCorrect": true,
+              "actionPts": 0.5,
+              "stepTotal": 2,
+              "feedback": []
+            },
+            {
+              "stepNumber": 2,
+              "leftRightCorrect": false,
+              "leftRightPts": 0,
+              "midCorrect": false,
+              "midPts": 0,
+              "aMidCorrect": false,
+              "aMidPts": 0,
+              "midValCorrect": false,
+              "midValPts": 0,
+              "comparisonCorrect": false,
+              "comparisonPts": 0,
+              "actionCorrect": false,
+              "actionPts": 0,
+              "stepTotal": 0,
+              "feedback": [
+                "Chưa có dữ liệu cho bước 2"
+              ]
+            }
+          ],
+          "conclusion": {
+            "indexCorrect": true,
+            "indexPts": 0.5,
+            "countCorrect": true,
+            "countPts": 0.5,
+            "explanationStatus": "pending_teacher_review",
+            "explanationPts": 0,
+            "explanationFeedback": "Diễn đạt tự do có liên quan, đánh dấu để Giáo viên theo dõi."
+          },
+          "handTotal": 3,
+          "pendingReviewScore": 0
+        }
+      },
+      "isRevised": false
+    },
+    "p-1791113519394-3642": {
+      "id": "sub-p-1791113519394-3642-1791113519405",
+      "roomId": "room-1791113519390",
+      "participantId": "p-1791113519394-3642",
+      "groupId": "p-1791113519394-3642",
+      "nickname": "An Nhiên",
+      "avatar": "cat",
+      "mcqAnswers": {
+        "mcq-1": "opt-1-a"
+      },
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": 0,
+            "right": 4,
+            "mid": 2,
+            "aMid": 8,
+            "comparison": "<",
+            "action": "keep_right",
+            "newLeft": 3,
+            "newRight": 4
+          }
+        ],
+        "finalIndex": 3,
+        "checkCount": 2,
+        "eliminationExplanation": "Em thấy 8 bé hơn 12 nên bỏ nửa trước"
+      },
+      "submittedAt": "2026-10-04T11:31:59.405Z",
+      "submittedBy": "p-1791113519394-3642",
+      "version": 1,
+      "score": {
+        "mcqScore": 1,
+        "handScore": 3.5,
+        "totalScore": 4.5,
+        "pendingReviewScore": 0,
+        "mcqBreakdown": {
+          "mcq-1": {
+            "isCorrect": true,
+            "points": 1,
+            "selectedOptionId": "opt-1-a",
+            "correctOptionId": "opt-1-a",
+            "explanation": "Thứ tự tăng dần cho phép xác định phía có thể chứa K. Dãy giảm dần cần thay đổi quy tắc so sánh; mã của bài này dùng dãy tăng dần."
+          },
+          "mcq-2": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-2-c",
+            "explanation": "9 là giá trị cần tìm, 5 là chỉ số (index), 6 là số lần kiểm tra từ đầu."
+          },
+          "mcq-3": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-3-b",
+            "explanation": "Các phần tử từ left đến mid không thể bằng K; loại cả mid và tiếp tục tìm ở phía bên phải."
+          },
+          "mcq-4": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-4-b",
+            "explanation": "left > right nghĩa là phạm vi rỗng. Khi left = right vẫn còn một phần tử cần kiểm tra."
+          },
+          "mcq-5": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-5-a",
+            "explanation": "Tuần tự gặp 2 ngay ở đầu (1 lần). Nhị phân xét 12 -> 5 -> 2 (3 lần). Không khẳng định nhị phân luôn ít lượt hơn trong mọi lần tìm."
+          }
+        },
+        "handBreakdown": {
+          "steps": [
+            {
+              "stepNumber": 1,
+              "leftRightCorrect": true,
+              "leftRightPts": 0.5,
+              "midCorrect": true,
+              "midPts": 0.25,
+              "aMidCorrect": true,
+              "aMidPts": 0.25,
+              "midValCorrect": true,
+              "midValPts": 0.5,
+              "comparisonCorrect": true,
+              "comparisonPts": 0.5,
+              "actionCorrect": true,
+              "actionPts": 0.5,
+              "stepTotal": 2,
+              "feedback": []
+            },
+            {
+              "stepNumber": 2,
+              "leftRightCorrect": false,
+              "leftRightPts": 0,
+              "midCorrect": false,
+              "midPts": 0,
+              "aMidCorrect": false,
+              "aMidPts": 0,
+              "midValCorrect": false,
+              "midValPts": 0,
+              "comparisonCorrect": false,
+              "comparisonPts": 0,
+              "actionCorrect": false,
+              "actionPts": 0,
+              "stepTotal": 0,
+              "feedback": [
+                "Chưa có dữ liệu cho bước 2"
+              ]
+            }
+          ],
+          "conclusion": {
+            "indexCorrect": true,
+            "indexPts": 0.5,
+            "countCorrect": true,
+            "countPts": 0.5,
+            "explanationStatus": "accepted",
+            "explanationPts": 0.5,
+            "explanationFeedback": "Diễn đạt tự do có liên quan, đánh dấu để Giáo viên theo dõi."
+          },
+          "handTotal": 3,
+          "pendingReviewScore": 0
+        },
+        "teacherAdjustments": [
+          {
+            "criterion": "explanation",
+            "originalPts": 0,
+            "adjustedPts": 0.5,
+            "reason": "Giải thích đúng bản chất dãy tăng dần",
+            "adjustedAt": "2026-10-04T11:31:59.416Z"
+          }
+        ]
+      },
+      "isRevised": false
+    },
+    "p-1791113519396-1797": {
+      "id": "sub-p-1791113519396-1797-1791113519407",
+      "roomId": "room-1791113519390",
+      "participantId": "p-1791113519396-1797",
+      "groupId": "p-1791113519396-1797",
+      "nickname": "Bảo Long",
+      "avatar": "dino",
+      "mcqAnswers": {
+        "mcq-1": "opt-1-a"
+      },
+      "handTrace": {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "left": 0,
+            "right": 4,
+            "mid": 2,
+            "aMid": 8,
+            "comparison": "<",
+            "action": "keep_right",
+            "newLeft": 3,
+            "newRight": 4
+          }
+        ],
+        "finalIndex": 3,
+        "checkCount": 2,
+        "eliminationExplanation": "Vì 8 < 12 nên loại bỏ phần đầu"
+      },
+      "submittedAt": "2026-10-04T11:31:59.407Z",
+      "submittedBy": "p-1791113519396-1797",
+      "version": 1,
+      "score": {
+        "mcqScore": 1,
+        "handScore": 3,
+        "totalScore": 4,
+        "pendingReviewScore": 0,
+        "mcqBreakdown": {
+          "mcq-1": {
+            "isCorrect": true,
+            "points": 1,
+            "selectedOptionId": "opt-1-a",
+            "correctOptionId": "opt-1-a",
+            "explanation": "Thứ tự tăng dần cho phép xác định phía có thể chứa K. Dãy giảm dần cần thay đổi quy tắc so sánh; mã của bài này dùng dãy tăng dần."
+          },
+          "mcq-2": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-2-c",
+            "explanation": "9 là giá trị cần tìm, 5 là chỉ số (index), 6 là số lần kiểm tra từ đầu."
+          },
+          "mcq-3": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-3-b",
+            "explanation": "Các phần tử từ left đến mid không thể bằng K; loại cả mid và tiếp tục tìm ở phía bên phải."
+          },
+          "mcq-4": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-4-b",
+            "explanation": "left > right nghĩa là phạm vi rỗng. Khi left = right vẫn còn một phần tử cần kiểm tra."
+          },
+          "mcq-5": {
+            "isCorrect": false,
+            "points": 0,
+            "selectedOptionId": "",
+            "correctOptionId": "opt-5-a",
+            "explanation": "Tuần tự gặp 2 ngay ở đầu (1 lần). Nhị phân xét 12 -> 5 -> 2 (3 lần). Không khẳng định nhị phân luôn ít lượt hơn trong mọi lần tìm."
+          }
+        },
+        "handBreakdown": {
+          "steps": [
+            {
+              "stepNumber": 1,
+              "leftRightCorrect": true,
+              "leftRightPts": 0.5,
+              "midCorrect": true,
+              "midPts": 0.25,
+              "aMidCorrect": true,
+              "aMidPts": 0.25,
+              "midValCorrect": true,
+              "midValPts": 0.5,
+              "comparisonCorrect": true,
+              "comparisonPts": 0.5,
+              "actionCorrect": true,
+              "actionPts": 0.5,
+              "stepTotal": 2,
+              "feedback": []
+            },
+            {
+              "stepNumber": 2,
+              "leftRightCorrect": false,
+              "leftRightPts": 0,
+              "midCorrect": false,
+              "midPts": 0,
+              "aMidCorrect": false,
+              "aMidPts": 0,
+              "midValCorrect": false,
+              "midValPts": 0,
+              "comparisonCorrect": false,
+              "comparisonPts": 0,
+              "actionCorrect": false,
+              "actionPts": 0,
+              "stepTotal": 0,
+              "feedback": [
+                "Chưa có dữ liệu cho bước 2"
+              ]
+            }
+          ],
+          "conclusion": {
+            "indexCorrect": true,
+            "indexPts": 0.5,
+            "countCorrect": true,
+            "countPts": 0.5,
+            "explanationStatus": "pending_teacher_review",
+            "explanationPts": 0,
+            "explanationFeedback": "Diễn đạt tự do có liên quan, đánh dấu để Giáo viên theo dõi."
+          },
+          "handTotal": 3,
+          "pendingReviewScore": 0
+        }
+      },
+      "isRevised": false
     }
   },
   "reflections": [],
@@ -5416,6 +7172,136 @@
       "isOnline": true,
       "joinedAt": "2026-10-04T11:15:25.231Z",
       "lastActive": "2026-10-04T11:15:25.236Z"
+    },
+    "p-1791112709273-4674": {
+      "id": "p-1791112709273-4674",
+      "roomId": "room-1791110691638",
+      "nickname": "Phong",
+      "avatar": "cat",
+      "isReady": true,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:18:29.273Z",
+      "lastActive": "2026-10-04T11:18:42.561Z"
+    },
+    "p-1791113501989-2692": {
+      "id": "p-1791113501989-2692",
+      "roomId": "room-1791113501985",
+      "nickname": "Bé Mèo Dễ Thương",
+      "avatar": "cat",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:41.989Z",
+      "lastActive": "2026-10-04T11:31:41.989Z"
+    },
+    "p-1791113501991-1880": {
+      "id": "p-1791113501991-1880",
+      "roomId": "room-1791113501985",
+      "nickname": "Minh Anh",
+      "avatar": "rabbit",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:41.991Z",
+      "lastActive": "2026-10-04T11:31:41.991Z"
+    },
+    "p-1791113501994-1254": {
+      "id": "p-1791113501994-1254",
+      "roomId": "room-1791113501985",
+      "nickname": "Minh Anh (2)",
+      "avatar": "panda",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:41.994Z",
+      "lastActive": "2026-10-04T11:31:41.994Z"
+    },
+    "p-1791113501996-7774": {
+      "id": "p-1791113501996-7774",
+      "roomId": "room-1791113501985",
+      "nickname": "Khủng Long Nhí",
+      "avatar": "dino",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:41.996Z",
+      "lastActive": "2026-10-04T11:31:41.999Z"
+    },
+    "p-1791113502015-5213": {
+      "id": "p-1791113502015-5213",
+      "roomId": "room-1791113502010",
+      "nickname": "An Nhiên",
+      "avatar": "cat",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:42.015Z",
+      "lastActive": "2026-10-04T11:31:42.019Z"
+    },
+    "p-1791113502016-727": {
+      "id": "p-1791113502016-727",
+      "roomId": "room-1791113502010",
+      "nickname": "Bảo Long",
+      "avatar": "dino",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:42.016Z",
+      "lastActive": "2026-10-04T11:31:42.021Z"
+    },
+    "p-1791113519348-4806": {
+      "id": "p-1791113519348-4806",
+      "roomId": "room-1791113519344",
+      "nickname": "Bé Mèo Dễ Thương",
+      "avatar": "cat",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:59.348Z",
+      "lastActive": "2026-10-04T11:31:59.348Z"
+    },
+    "p-1791113519350-5587": {
+      "id": "p-1791113519350-5587",
+      "roomId": "room-1791113519344",
+      "nickname": "Minh Anh",
+      "avatar": "rabbit",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:59.350Z",
+      "lastActive": "2026-10-04T11:31:59.350Z"
+    },
+    "p-1791113519351-6121": {
+      "id": "p-1791113519351-6121",
+      "roomId": "room-1791113519344",
+      "nickname": "Minh Anh (2)",
+      "avatar": "panda",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:59.351Z",
+      "lastActive": "2026-10-04T11:31:59.351Z"
+    },
+    "p-1791113519353-3374": {
+      "id": "p-1791113519353-3374",
+      "roomId": "room-1791113519344",
+      "nickname": "Khủng Long Nhí",
+      "avatar": "dino",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:59.353Z",
+      "lastActive": "2026-10-04T11:31:59.355Z"
+    },
+    "p-1791113519394-3642": {
+      "id": "p-1791113519394-3642",
+      "roomId": "room-1791113519390",
+      "nickname": "An Nhiên",
+      "avatar": "cat",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:59.394Z",
+      "lastActive": "2026-10-04T11:31:59.400Z"
+    },
+    "p-1791113519396-1797": {
+      "id": "p-1791113519396-1797",
+      "roomId": "room-1791113519390",
+      "nickname": "Bảo Long",
+      "avatar": "dino",
+      "isReady": false,
+      "isOnline": true,
+      "joinedAt": "2026-10-04T11:31:59.396Z",
+      "lastActive": "2026-10-04T11:31:59.402Z"
     }
   }
 }

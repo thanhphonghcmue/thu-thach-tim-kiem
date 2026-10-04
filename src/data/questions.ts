@@ -31,8 +31,8 @@ int LinearSearch(const int A[], int n, int K) {
     return -1; // Không tìm thấy
 }`;
 
-export const HAND_TRACE_ARRAY = [2, 5, 8, 12, 16, 23, 38, 56];
-export const HAND_TRACE_TARGET = 38;
+export const HAND_TRACE_ARRAY = [2, 5, 8, 12, 16];
+export const HAND_TRACE_TARGET = 12;
 
 export const STANDARD_HAND_TRACE = {
   array: HAND_TRACE_ARRAY,
@@ -41,41 +41,30 @@ export const STANDARD_HAND_TRACE = {
     {
       stepNumber: 1,
       left: 0,
-      right: 7,
-      mid: 3,
-      aMid: 12,
+      right: 4,
+      mid: 2,
+      aMid: 8,
       comparison: '<',
       action: 'keep_right',
-      newLeft: 4,
-      newRight: 7,
+      newLeft: 3,
+      newRight: 4,
     },
     {
       stepNumber: 2,
-      left: 4,
-      right: 7,
-      mid: 5,
-      aMid: 23,
-      comparison: '<',
-      action: 'keep_right',
-      newLeft: 6,
-      newRight: 7,
-    },
-    {
-      stepNumber: 3,
-      left: 6,
-      right: 7,
-      mid: 6,
-      aMid: 38,
+      left: 3,
+      right: 4,
+      mid: 3,
+      aMid: 12,
       comparison: '=',
       action: 'found',
-      newLeft: 6,
-      newRight: 7,
+      newLeft: 3,
+      newRight: 4,
     },
   ],
   conclusion: {
-    finalIndex: 6,
-    checkCount: 3,
-    explanation: 'Khi A[mid] < K, mọi phần tử từ left đến mid đều <= A[mid] < K nên không thể bằng K.',
+    finalIndex: 3,
+    checkCount: 2,
+    explanation: 'Giá trị 12 tìm thấy tại chỉ số 3 sau 2 lần kiểm tra phần tử giữa. Phân biệt: 12 là giá trị, 3 là chỉ số, 2 là số lần kiểm tra.',
   },
 };
 

@@ -49,19 +49,19 @@ export function parseStepLine(line: string, defaultStepNum: number): HandTraceSt
   let comparison: '<' | '=' | '>' | '' = '';
   if (norm.includes('==') || norm.includes('=')) {
     // Kiểm tra xem có so sánh giá trị không
-    if (/\b(?:38\s*==?\s*38|a\[.*?\]\s*==?\s*(?:38|k)|tìm thấy|found)\b/i.test(norm)) {
+    if (/\b(?:12\s*==?\s*12|38\s*==?\s*38|a\[.*?\]\s*==?\s*(?:12|38|k)|tìm thấy|found)\b/i.test(norm)) {
       comparison = '=';
     }
   }
   if (/<|\bnhỏ hơn\b|\bless\b/i.test(norm)) {
     // Chú ý đảo ngược: nếu ghi K > A[mid] thì về mặt A[mid] với K là '<'
-    if (/\b(?:k|38)\s*>\s*(?:a\[|12|23)/i.test(norm)) {
+    if (/\b(?:k|12|38)\s*>\s*(?:a\[|2|5|8|12|16|23)/i.test(norm)) {
       comparison = '<';
     } else {
       comparison = '<';
     }
   } else if (/>|\blớn hơn\b|\bgreater\b/i.test(norm)) {
-    if (/\b(?:k|38)\s*<\s*(?:a\[|12|23)/i.test(norm)) {
+    if (/\b(?:k|12|38)\s*<\s*(?:a\[|2|5|8|12|16|23)/i.test(norm)) {
       comparison = '<';
     } else {
       comparison = '>';
@@ -77,9 +77,9 @@ export function parseStepLine(line: string, defaultStepNum: number): HandTraceSt
 
   if (/\b(tìm thấy|tim thay|found|bằng k|bang k|tra ve|trả về|return)\b/.test(lowerNorm) && !hasNegation) {
     action = 'found';
-  } else if (/\b(giữ nửa phải|giu nua phai|nửa phải|nua phai|phía phải|loại nửa trái|loai nua trai|bỏ nửa trái|bo nua trai)\b/.test(lowerNorm) && !hasNegation) {
+  } else if (/\b(tìm tiếp bên phải|tim tiep ben phai|tìm bên phải|tim ben phai|bên phải|ben phai|giữ nửa phải|giu nua phai|nửa phải|nua phai|phía phải|loại nửa trái|loai nua trai|bỏ nửa trái|bo nua trai)\b/.test(lowerNorm) && !hasNegation) {
     action = 'keep_right';
-  } else if (/\b(giữ nửa trái|giu nua trai|nửa trái|nua trai|loại nửa phải|bỏ nửa phải)\b/.test(lowerNorm) && !hasNegation) {
+  } else if (/\b(tìm tiếp bên trái|tim tiep ben trái|tìm bên trái|tim ben trai|bên trái|ben trai|giữ nửa trái|giu nua trai|nửa trái|nua trai|loại nửa phải|bỏ nửa phải)\b/.test(lowerNorm) && !hasNegation) {
     action = 'keep_left';
   }
 
@@ -152,7 +152,6 @@ export function parseHandTraceText(rawText: string): { data: HandTraceData; pars
       steps: steps.length > 0 ? steps : [
         { stepNumber: 1, left: '', right: '', mid: '', aMid: '', comparison: '', action: '', newLeft: '', newRight: '' },
         { stepNumber: 2, left: '', right: '', mid: '', aMid: '', comparison: '', action: '', newLeft: '', newRight: '' },
-        { stepNumber: 3, left: '', right: '', mid: '', aMid: '', comparison: '', action: '', newLeft: '', newRight: '' },
       ],
       finalIndex,
       checkCount,

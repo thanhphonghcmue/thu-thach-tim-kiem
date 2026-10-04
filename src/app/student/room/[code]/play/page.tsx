@@ -501,7 +501,7 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
                 onClick={() => setShowSubmitModal(false)}
                 className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
               >
-                Kiểm tra lại
+                Quay lại sửa
               </button>
               <button
                 type="button"
@@ -509,7 +509,7 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
                 onClick={handleSubmitOfficial}
                 className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer"
               >
-                {submitting ? 'Đang nộp...' : 'Đồng ý nộp bài'}
+                {submitting ? 'Đang nộp...' : 'Nộp bài'}
               </button>
             </div>
           </div>

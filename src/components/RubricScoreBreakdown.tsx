@@ -97,103 +97,111 @@ export default function RubricScoreBreakdown({
           🔍 Phần 2: Chạy tay thuật toán Nhị phân (5.00 điểm)
         </h4>
 
-        {/* 3 Bước chạy tay (1.25 đ mỗi bước) */}
+        {/* 2 Bước chạy tay (2.00 đ mỗi bước) */}
         <div className="space-y-3">
-          {handBreakdown.steps.map((st) => (
-            <div key={st.stepNumber} className="border border-slate-200 rounded-xl p-4 bg-slate-50/60">
-              <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
-                <span className="font-bold text-slate-700 text-xs">
-                  Bước {st.stepNumber} (Tối đa 1.25 đ)
-                </span>
-                <span className="font-bold text-xs text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded border border-sky-200">
-                  {st.stepTotal.toFixed(2)} / 1.25 đ
-                </span>
+          {handBreakdown.steps.map((st) => {
+            const isStep1 = st.stepNumber === 1;
+
+            return (
+              <div key={st.stepNumber} className="border border-slate-200 rounded-xl p-4 bg-slate-50/60">
+                <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
+                  <span className="font-bold text-slate-800 text-xs sm:text-sm">
+                    Bước {st.stepNumber} (Tối đa 2.00 đ)
+                  </span>
+                  <span className="font-bold text-xs text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded border border-sky-200">
+                    {st.stepTotal.toFixed(2)} / 2.00 đ
+                  </span>
+                </div>
+
+                {/* 4 Tiêu chí độc lập theo đề bài chuẩn (0.50 đ mỗi tiêu chí) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+                  {/* Tiêu chí 1: left, right ban đầu */}
+                  <div className={`p-2.5 rounded-lg border ${st.leftRightCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+                    <span className="text-[11px] text-slate-500 block">
+                      {isStep1 ? 'left = 0, right = 4 (0.50đ)' : 'left = 3, right = 4 (0.50đ)'}
+                    </span>
+                    <strong className={st.leftRightCorrect ? 'text-emerald-700' : 'text-rose-700'}>
+                      {st.leftRightPts.toFixed(2)} đ
+                    </strong>
+                  </div>
+
+                  {/* Tiêu chí 2: mid và A[mid] */}
+                  <div className={`p-2.5 rounded-lg border ${st.midValCorrect || (st.midCorrect && st.aMidCorrect) ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+                    <span className="text-[11px] text-slate-500 block">
+                      {isStep1 ? 'mid = 2 & A[2] = 8 (0.50đ)' : 'mid = 3 & A[3] = 12 (0.50đ)'}
+                    </span>
+                    <strong className={st.midValCorrect || (st.midCorrect && st.aMidCorrect) ? 'text-emerald-700' : 'text-rose-700'}>
+                      {(st.midValPts !== undefined ? st.midValPts : st.midPts + st.aMidPts).toFixed(2)} đ
+                    </strong>
+                  </div>
+
+                  {/* Tiêu chí 3: So sánh */}
+                  <div className={`p-2.5 rounded-lg border ${st.comparisonCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+                    <span className="text-[11px] text-slate-500 block">
+                      {isStep1 ? '8 < 12 & tìm bên phải (0.50đ)' : 'So sánh bằng K = 12 (0.50đ)'}
+                    </span>
+                    <strong className={st.comparisonCorrect ? 'text-emerald-700' : 'text-rose-700'}>
+                      {st.comparisonPts.toFixed(2)} đ
+                    </strong>
+                  </div>
+
+                  {/* Tiêu chí 4: Hành động / Cập nhật */}
+                  <div className={`p-2.5 rounded-lg border ${st.actionCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+                    <span className="text-[11px] text-slate-500 block">
+                      {isStep1 ? 'Cập nhật left=3, right=4 (0.50đ)' : 'Chọn tìm thấy và dừng (0.50đ)'}
+                    </span>
+                    <strong className={st.actionCorrect ? 'text-emerald-700' : 'text-rose-700'}>
+                      {st.actionPts.toFixed(2)} đ
+                    </strong>
+                  </div>
+                </div>
+
+                {st.feedback.length > 0 && (
+                  <div className="mt-2 text-[11px] text-rose-700 bg-rose-50 p-2.5 rounded-lg border border-rose-100">
+                    {st.feedback.map((fb, fIdx) => (
+                      <p key={fIdx}>• {fb}</p>
+                    ))}
+                  </div>
+                )}
               </div>
-
-              {/* Từng tiêu chí nhỏ */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <div className={`p-2 rounded border ${st.leftRightCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
-                  <span className="text-[11px] text-slate-500 block">left, right ban đầu (0.25đ)</span>
-                  <strong className={st.leftRightCorrect ? 'text-emerald-700' : 'text-rose-700'}>
-                    {st.leftRightPts.toFixed(2)} đ
-                  </strong>
-                </div>
-
-                <div className={`p-2 rounded border ${st.midCorrect && st.aMidCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
-                  <span className="text-[11px] text-slate-500 block">mid & A[mid] (0.50đ)</span>
-                  <strong className={st.midCorrect && st.aMidCorrect ? 'text-emerald-700' : 'text-rose-700'}>
-                    {(st.midPts + st.aMidPts).toFixed(2)} đ
-                  </strong>
-                </div>
-
-                <div className={`p-2 rounded border ${st.comparisonCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
-                  <span className="text-[11px] text-slate-500 block">So sánh với K (0.25đ)</span>
-                  <strong className={st.comparisonCorrect ? 'text-emerald-700' : 'text-rose-700'}>
-                    {st.comparisonPts.toFixed(2)} đ
-                  </strong>
-                </div>
-
-                <div className={`p-2 rounded border ${st.actionCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
-                  <span className="text-[11px] text-slate-500 block">Hành động / Dừng (0.25đ)</span>
-                  <strong className={st.actionCorrect ? 'text-emerald-700' : 'text-rose-700'}>
-                    {st.actionPts.toFixed(2)} đ
-                  </strong>
-                </div>
-              </div>
-
-              {st.feedback.length > 0 && (
-                <div className="mt-2 text-[11px] text-rose-600 bg-rose-50 p-2 rounded">
-                  {st.feedback.map((fb, fIdx) => (
-                    <p key={fIdx}>• {fb}</p>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Kết luận & Giải thích (1.25 đ) */}
+        {/* Kết luận — 1.00 đ */}
         <div className="border border-amber-200 bg-amber-50/40 rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-amber-200">
-            <span className="font-bold text-amber-950 text-xs">
-              Kết luận & Giải thích loại phạm vi (Tối đa 1.25 đ)
-            </span>
+            <div>
+              <span className="font-bold text-amber-950 text-xs sm:text-sm block">
+                🎯 Kết luận bài toán (Tối đa 1.00 đ)
+              </span>
+              <span className="text-[11px] text-amber-800">
+                Phân biệt rõ: 12 là giá trị; 3 là chỉ số; 2 là số lần kiểm tra.
+              </span>
+            </div>
             <span className="font-bold text-xs text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded border border-amber-300">
-              {(conc.indexPts + conc.countPts + conc.explanationPts).toFixed(2)} / 1.25 đ
+              {(conc.indexPts + conc.countPts).toFixed(2)} / 1.00 đ
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-            <div className={`p-2.5 rounded border bg-white ${conc.indexCorrect ? 'border-emerald-300 text-emerald-800' : 'border-rose-300 text-rose-800'}`}>
-              <span className="text-[11px] text-slate-500 block">Chỉ số 6 (0.50đ)</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className={`p-2.5 rounded-lg border bg-white ${conc.indexCorrect ? 'border-emerald-300 text-emerald-800' : 'border-rose-300 text-rose-800'}`}>
+              <span className="text-[11px] text-slate-500 block">Chỉ số tìm thấy = 3 (0.50đ)</span>
               <strong>{conc.indexPts.toFixed(2)} đ</strong>
             </div>
 
-            <div className={`p-2.5 rounded border bg-white ${conc.countCorrect ? 'border-emerald-300 text-emerald-800' : 'border-rose-300 text-rose-800'}`}>
-              <span className="text-[11px] text-slate-500 block">Số lần 3 (0.25đ)</span>
+            <div className={`p-2.5 rounded-lg border bg-white ${conc.countCorrect ? 'border-emerald-300 text-emerald-800' : 'border-rose-300 text-rose-800'}`}>
+              <span className="text-[11px] text-slate-500 block">Số lần kiểm tra phần tử giữa = 2 (0.50đ)</span>
               <strong>{conc.countPts.toFixed(2)} đ</strong>
             </div>
+          </div>
 
-            <div className={`p-2.5 rounded border bg-white ${
-              conc.explanationStatus === 'accepted'
-                ? 'border-emerald-300 text-emerald-800'
-                : conc.explanationStatus === 'pending_teacher_review'
-                ? 'border-amber-400 text-amber-900 bg-amber-50'
-                : 'border-rose-300 text-rose-800'
-            }`}>
-              <span className="text-[11px] text-slate-500 block">Giải thích (0.50đ)</span>
-              <strong>
-                {conc.explanationStatus === 'pending_teacher_review'
-                  ? 'Chờ duyệt (+0.50 đ)'
-                  : `${conc.explanationPts.toFixed(2)} đ`}
-              </strong>
+          {conc.explanationFeedback && (
+            <div className="text-xs bg-white p-3 rounded-lg border border-amber-200 text-slate-700">
+              <span className="font-semibold block text-slate-800 mb-0.5">Nhận xét:</span>
+              <p>{conc.explanationFeedback}</p>
             </div>
-          </div>
-
-          <div className="text-xs bg-white p-3 rounded-lg border border-amber-200 text-slate-700">
-            <span className="font-semibold block text-slate-800 mb-1">Nhận xét hệ thống:</span>
-            <p>{conc.explanationFeedback}</p>
-          </div>
+          )}
         </div>
       </div>
     </div>

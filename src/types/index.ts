@@ -141,16 +141,18 @@ export interface HandTraceData {
 export interface StepScoreDetail {
   stepNumber: number;
   leftRightCorrect: boolean;
-  leftRightPts: number; // 0.25
+  leftRightPts: number; // Tối đa 0.50
   midCorrect: boolean;
   midPts: number; // 0.25
   aMidCorrect: boolean;
   aMidPts: number; // 0.25
+  midValCorrect?: boolean;
+  midValPts?: number; // Tối đa 0.50
   comparisonCorrect: boolean;
-  comparisonPts: number; // 0.25
+  comparisonPts: number; // Tối đa 0.50
   actionCorrect: boolean;
-  actionPts: number; // 0.25
-  stepTotal: number; // Tối đa 1.25
+  actionPts: number; // Tối đa 0.50
+  stepTotal: number; // Tối đa 2.00
   feedback: string[];
 }
 
@@ -158,10 +160,10 @@ export interface ConclusionScoreDetail {
   indexCorrect: boolean;
   indexPts: number; // 0.50
   countCorrect: boolean;
-  countPts: number; // 0.25
-  explanationStatus: 'accepted' | 'pending_teacher_review' | 'rejected';
-  explanationPts: number; // 0.50 hoặc 0
-  explanationFeedback: string;
+  countPts: number; // 0.50
+  explanationStatus?: 'accepted' | 'pending_teacher_review' | 'rejected';
+  explanationPts?: number; // 0.00
+  explanationFeedback?: string;
 }
 
 export interface HandScoreBreakdown {

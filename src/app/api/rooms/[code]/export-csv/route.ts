@@ -10,13 +10,12 @@ export async function GET(request: Request, props: { params: Promise<{ code: str
   }
 
   const leaderboard = store.getLeaderboard(room.id);
-  const groups = store.getGroupsByRoom(room.id);
 
-  // Xây dựng nội dung CSV
+  // Xây dựng nội dung CSV cá nhân
   const headers = [
     'Hạng',
-    'Tên nhóm',
-    'Thành viên',
+    'Biệt danh học sinh',
+    'Avatar',
     'Trạng thái nộp',
     'Điểm Trắc nghiệm (/5)',
     'Điểm Chạy tay (/5)',
@@ -28,13 +27,13 @@ export async function GET(request: Request, props: { params: Promise<{ code: str
   const rows = leaderboard.map(item => {
     return [
       item.rank ? String(item.rank) : 'Chưa xếp',
-      `"${item.groupName.replace(/"/g, '""')}"`,
-      `"${item.members.join(', ').replace(/"/g, '""')}"`,
+      `"${item.nickname.replace(/"/g, '""')}"`,
+      `"${item.avatar}"`,
       item.isSubmitted ? 'Đã nộp' : 'Chưa nộp',
       item.mcqScore.toFixed(2),
       item.handScore.toFixed(2),
       item.totalScore.toFixed(2),
-      item.isPendingReview ? 'Có (Tạm tính)' : 'Không',
+      item.isPendingReview ? 'Có (Chờ duyệt)' : 'Không',
       item.submittedAt ? new Date(item.submittedAt).toLocaleTimeString('vi-VN') : '',
     ].join(',');
   });

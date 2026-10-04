@@ -13,6 +13,8 @@ import {
   SuggestedRole,
   TeacherAdjustment,
   Participant,
+  StudentDraft,
+  StudentSubmission,
 } from '@/types';
 import { broadcastRoomEvent } from './events';
 import { gradeSubmission } from './grading';
@@ -285,29 +287,13 @@ class Store {
       finalNickname = `${cleanNick} (${duplicateCount})`;
     }
 
-    // Xác định nhóm tham gia
-    const roomGroups = this.getGroupsByRoom(room.id);
-    let assignedGroup = roomGroups.find(g => g.id === targetGroupId);
-    if (!assignedGroup) {
-      // Nếu không chỉ định nhóm hoặc nhóm không tồn tại, tự động xếp vào nhóm có ít thành viên nhất
-      if (roomGroups.length > 0) {
-        assignedGroup = [...roomGroups].sort((a, b) => a.studentIds.length - b.studentIds.length)[0];
-      }
-    }
-
-    if (!assignedGroup) {
-      return { success: false, error: 'Phòng chưa có nhóm để tham gia' };
-    }
-
     const participantId = `p-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     const participant: Participant = {
       id: participantId,
       roomId: room.id,
-      groupId: assignedGroup.id,
       nickname: finalNickname,
       avatar: avatar || 'cat',
       isReady: false,
-      role: 'verifier',
       isOnline: true,
       joinedAt: new Date().toISOString(),
       lastActive: new Date().toISOString(),
@@ -315,17 +301,25 @@ class Store {
 
     this.data.participants[participantId] = participant;
 
-    // Thêm vào nhóm
-    if (!assignedGroup.studentIds.includes(participantId)) {
-      assignedGroup.studentIds.push(participantId);
-    }
-    // Nếu nhóm chưa có người điều khiển, chỉ định bạn đầu tiên làm người điều khiển
-    if (!assignedGroup.driverStudentId) {
-      assignedGroup.driverStudentId = participantId;
-      participant.role = 'driver';
-    }
+    // Khởi tạo sẵn bản nháp riêng biệt cho học sinh này
+    this.data.drafts[participantId] = {
+      participantId,
+      mcqAnswers: {},
+      handTrace: {
+        steps: [
+          { stepNumber: 1, left: '', right: '', mid: '', aMid: '', comparison: '', action: '', newLeft: '', newRight: '' },
+          { stepNumber: 2, left: '', right: '', mid: '', aMid: '', comparison: '', action: '', newLeft: '', newRight: '' },
+          { stepNumber: 3, left: '', right: '', mid: '', aMid: '', comparison: '', action: '', newLeft: '', newRight: '' },
+        ],
+        finalIndex: '',
+        checkCount: '',
+        eliminationExplanation: '',
+      },
+      activeQuestionIndex: 0,
+      updatedAt: new Date().toISOString(),
+      version: 1,
+    };
 
-    assignedGroup.lastSyncedAt = new Date().toISOString();
     this.saveDatabase();
 
     broadcastRoomEvent({
@@ -370,15 +364,9 @@ class Store {
     if (!p) return { success: false, error: 'Không tìm thấy người tham gia' };
 
     if (action === 'kick') {
-      // Xóa khỏi nhóm
-      const group = this.data.groups[p.groupId];
-      if (group) {
-        group.studentIds = group.studentIds.filter(id => id !== participantId);
-        if (group.driverStudentId === participantId) {
-          group.driverStudentId = group.studentIds[0] || '';
-        }
-      }
       delete this.data.participants[participantId];
+      delete this.data.drafts[participantId];
+      delete this.data.submissions[participantId];
       this.saveDatabase();
 
       broadcastRoomEvent({
@@ -399,39 +387,6 @@ class Store {
         type: 'room_updated',
         roomId: room.id,
         data: { action: 'participant_renamed', participant: p },
-      });
-      return { success: true };
-    }
-
-    if (action === 'move_group') {
-      const targetGroupId = payload.targetGroupId;
-      const targetGroup = this.data.groups[targetGroupId];
-      if (!targetGroup) return { success: false, error: 'Nhóm chuyển tới không tồn tại' };
-
-      // Xóa khỏi nhóm cũ
-      const oldGroup = this.data.groups[p.groupId];
-      if (oldGroup) {
-        oldGroup.studentIds = oldGroup.studentIds.filter(id => id !== participantId);
-        if (oldGroup.driverStudentId === participantId) {
-          oldGroup.driverStudentId = oldGroup.studentIds[0] || '';
-        }
-      }
-
-      // Thêm vào nhóm mới
-      p.groupId = targetGroupId;
-      if (!targetGroup.studentIds.includes(participantId)) {
-        targetGroup.studentIds.push(participantId);
-      }
-      if (!targetGroup.driverStudentId) {
-        targetGroup.driverStudentId = participantId;
-      }
-
-      this.saveDatabase();
-
-      broadcastRoomEvent({
-        type: 'room_updated',
-        roomId: room.id,
-        data: { action: 'participant_moved', participant: p },
       });
       return { success: true };
     }
@@ -540,7 +495,7 @@ class Store {
     }
 
     this.saveDatabase();
-    return { room, groups };
+    return { room, groups: [] };
   }
 
   updateRoom(roomId: string, updates: Partial<Room>): Room | undefined {
@@ -559,7 +514,7 @@ class Store {
     return room;
   }
 
-  // --- GROUP API ---
+  // --- GROUP API (Tương thích) ---
   getGroupsByRoom(roomId: string): Group[] {
     return Object.values(this.data.groups).filter(g => g.roomId === roomId);
   }
@@ -570,52 +525,43 @@ class Store {
 
   setGroupDriver(groupId: string, newDriverStudentId: string): Group | undefined {
     const group = this.data.groups[groupId];
-    if (!group) return undefined;
-
-    group.driverStudentId = newDriverStudentId;
-    group.lastSyncedAt = new Date().toISOString();
-    this.saveDatabase();
-
-    broadcastRoomEvent({
-      type: 'driver_changed',
-      roomId: group.roomId,
-      data: { groupId, driverStudentId: newDriverStudentId },
-    });
-
+    if (group) {
+      group.driverStudentId = newDriverStudentId;
+      this.saveDatabase();
+    }
     return group;
   }
 
-  // --- DRAFT & REALTIME SYNC ---
-  getDraft(groupId: string): GroupDraft | undefined {
-    return this.data.drafts[groupId];
+  // --- DRAFT & REALTIME SYNC (CÁ NHÂN) ---
+  getDraft(targetId: string): StudentDraft | undefined {
+    return this.data.drafts[targetId];
   }
 
-  saveDraft(groupId: string, draftData: Partial<GroupDraft>, studentId: string): { success: boolean; draft?: GroupDraft; error?: string } {
-    const group = this.data.groups[groupId];
-    if (!group) return { success: false, error: 'Không tìm thấy nhóm' };
+  saveDraft(
+    targetId: string,
+    draftData: Partial<StudentDraft>,
+    studentId?: string
+  ): { success: boolean; draft?: StudentDraft; error?: string } {
+    const id = targetId || studentId;
+    if (!id) return { success: false, error: 'Thiếu định danh học sinh' };
 
-    const room = this.data.rooms[group.roomId];
-    if (!room) return { success: false, error: 'Không tìm thấy phòng' };
+    const participant = this.data.participants[id];
+    const roomId = participant?.roomId;
+    const room = roomId ? this.data.rooms[roomId] : Object.values(this.data.rooms).find(r => r.status === 'running');
 
-    // Kiểm tra quyền: Chỉ driver mới được sửa
-    if (group.driverStudentId !== studentId) {
-      return { success: false, error: 'Chỉ Người điều khiển nhóm mới có quyền lưu bài làm' };
-    }
-
-    // Không được sửa khi phòng đã đóng hoặc đang tạm dừng
-    if (room.status !== 'running') {
+    if (room && room.status !== 'running') {
       return { success: false, error: `Phòng thi hiện đang ở trạng thái: ${room.status}` };
     }
 
-    // Không được sửa nếu đã nộp bài chính thức
-    if (this.data.submissions[groupId]?.submittedAt && !room.isRevisionOpen) {
-      return { success: false, error: 'Nhóm đã nộp bài chính thức, không thể sửa' };
+    if (this.data.submissions[id]?.submittedAt && (!room || !room.isRevisionOpen)) {
+      return { success: false, error: 'Học sinh đã nộp bài chính thức, không thể sửa' };
     }
 
-    const existingDraft = this.data.drafts[groupId];
+    const existingDraft = this.data.drafts[id];
     const newVersion = (existingDraft?.version || 0) + 1;
 
-    const updatedDraft: GroupDraft = {
+    const updatedDraft: StudentDraft = {
+      participantId: id,
       mcqAnswers: draftData.mcqAnswers !== undefined ? draftData.mcqAnswers : (existingDraft?.mcqAnswers || {}),
       handTrace: draftData.handTrace !== undefined ? draftData.handTrace : (existingDraft?.handTrace || {
         steps: [],
@@ -624,33 +570,90 @@ class Store {
         eliminationExplanation: '',
       }),
       activeQuestionIndex: draftData.activeQuestionIndex !== undefined ? draftData.activeQuestionIndex : (existingDraft?.activeQuestionIndex || 0),
-      updatedBy: studentId,
       updatedAt: new Date().toISOString(),
       version: newVersion,
     };
 
-    this.data.drafts[groupId] = updatedDraft;
-    group.lastSyncedAt = new Date().toISOString();
+    this.data.drafts[id] = updatedDraft;
+    if (participant) {
+      participant.lastActive = new Date().toISOString();
+    }
     this.saveDatabase();
 
-    broadcastRoomEvent({
-      type: 'group_draft_updated',
-      roomId: group.roomId,
-      data: { groupId, draft: updatedDraft },
-    });
+    if (roomId) {
+      broadcastRoomEvent({
+        type: 'group_draft_updated',
+        roomId,
+        data: { participantId: id, groupId: id, draft: updatedDraft },
+      });
+    }
 
     return { success: true, draft: updatedDraft };
   }
 
-  // --- SUBMISSIONS & GRADING ---
-  getSubmission(groupId: string): GroupSubmission | undefined {
-    return this.data.submissions[groupId];
+  // --- SUBMISSIONS & GRADING (CÁ NHÂN) ---
+  getSubmission(targetId: string): StudentSubmission | undefined {
+    return this.data.submissions[targetId];
   }
 
-  getAllSubmissions(roomId: string): GroupSubmission[] {
-    const groups = this.getGroupsByRoom(roomId);
-    const groupIds = new Set(groups.map(g => g.id));
-    return Object.values(this.data.submissions).filter(s => groupIds.has(s.groupId));
+  getAllSubmissions(roomId: string): StudentSubmission[] {
+    const participants = this.getParticipantsByRoom(roomId);
+    const participantIds = new Set(participants.map(p => p.id));
+    return Object.values(this.data.submissions).filter(s => (s.participantId ? participantIds.has(s.participantId) : false) || s.roomId === roomId);
+  }
+
+  submitStudent(
+    studentId: string,
+    mcqAnswers: Record<string, string>,
+    handTrace: any,
+    isRevision: boolean = false
+  ): { success: boolean; submission?: StudentSubmission; error?: string } {
+    const participant = this.data.participants[studentId];
+    const roomId = participant?.roomId || (Object.values(this.data.rooms).find(r => r.status === 'running')?.id);
+    const room = roomId ? this.data.rooms[roomId] : undefined;
+
+    if (!room) return { success: false, error: 'Không tìm thấy phòng thi' };
+
+    if (this.data.submissions[studentId] && !isRevision && !room.isRevisionOpen) {
+      return { success: false, error: 'Bài làm của bạn đã được nộp trước đó' };
+    }
+
+    const nickname = participant?.nickname || 'Học sinh';
+    const avatar = participant?.avatar || 'cat';
+    const score = gradeSubmission(mcqAnswers, handTrace, room.selectedQuestionIds);
+
+    const submission: StudentSubmission = {
+      id: `sub-${studentId}-${Date.now()}`,
+      roomId: room.id,
+      participantId: studentId,
+      groupId: studentId,
+      nickname,
+      avatar,
+      mcqAnswers,
+      handTrace,
+      submittedAt: new Date().toISOString(),
+      submittedBy: studentId,
+      version: (this.data.submissions[studentId]?.version || 0) + 1,
+      score,
+      isRevised: isRevision,
+    };
+
+    this.data.submissions[studentId] = submission;
+    this.saveDatabase();
+
+    broadcastRoomEvent({
+      type: 'submission_received',
+      roomId: room.id,
+      data: {
+        participantId: studentId,
+        groupId: studentId,
+        nickname,
+        submittedAt: submission.submittedAt,
+        score: room.status === 'published' ? score : undefined,
+      },
+    });
+
+    return { success: true, submission };
   }
 
   submitGroup(
@@ -659,60 +662,16 @@ class Store {
     mcqAnswers: Record<string, string>,
     handTrace: any,
     isRevision: boolean = false
-  ): { success: boolean; submission?: GroupSubmission; error?: string } {
-    const group = this.data.groups[groupId];
-    if (!group) return { success: false, error: 'Không tìm thấy nhóm' };
-
-    const room = this.data.rooms[group.roomId];
-    if (!room) return { success: false, error: 'Không tìm thấy phòng' };
-
-    if (group.driverStudentId !== studentId) {
-      return { success: false, error: 'Chỉ Người điều khiển nhóm mới có quyền nộp bài' };
-    }
-
-    // Nếu đã nộp trước đó và không phải lượt sửa
-    if (this.data.submissions[groupId] && !isRevision && !room.isRevisionOpen) {
-      return { success: false, error: 'Bài làm của nhóm đã được nộp trước đó' };
-    }
-
-    // Tính điểm tự động qua rubric engine
-    const score = gradeSubmission(mcqAnswers, handTrace, room.selectedQuestionIds);
-
-    const submission: GroupSubmission = {
-      id: `sub-${groupId}-${Date.now()}`,
-      roomId: room.id,
-      groupId,
-      mcqAnswers,
-      handTrace,
-      submittedAt: new Date().toISOString(),
-      submittedBy: studentId,
-      version: (this.data.submissions[groupId]?.version || 0) + 1,
-      score,
-      isRevised: isRevision,
-    };
-
-    this.data.submissions[groupId] = submission;
-    this.saveDatabase();
-
-    broadcastRoomEvent({
-      type: 'submission_received',
-      roomId: room.id,
-      data: {
-        groupId,
-        submittedAt: submission.submittedAt,
-        score: room.status === 'published' ? score : undefined, // Bảo mật: Không công bố điểm trước khi giáo viên công bố
-      },
-    });
-
-    return { success: true, submission };
+  ): { success: boolean; submission?: StudentSubmission; error?: string } {
+    return this.submitStudent(studentId || groupId, mcqAnswers, handTrace, isRevision);
   }
 
   // Giáo viên duyệt và điều chỉnh điểm từng tiêu chí kèm lý do
   adjustScore(
-    groupId: string,
+    targetId: string,
     adjustment: TeacherAdjustment
-  ): { success: boolean; submission?: GroupSubmission; error?: string } {
-    const sub = this.data.submissions[groupId];
+  ): { success: boolean; submission?: StudentSubmission; error?: string } {
+    const sub = this.data.submissions[targetId];
     if (!sub || !sub.score) return { success: false, error: 'Chưa có bài nộp để điều chỉnh điểm' };
 
     if (!sub.score.teacherAdjustments) {
@@ -739,7 +698,7 @@ class Store {
     broadcastRoomEvent({
       type: 'scores_published',
       roomId: sub.roomId,
-      data: { groupId, score: sub.score },
+      data: { participantId: targetId, groupId: targetId, score: sub.score },
     });
 
     return { success: true, submission: sub };
@@ -768,48 +727,63 @@ class Store {
     return this.data.reflections.filter(r => r.roomId === roomId);
   }
 
-  // --- LEADERBOARD ---
+  // --- LEADERBOARD (CÁ NHÂN) ---
   getLeaderboard(roomId: string): LeaderboardEntry[] {
-    const groups = this.getGroupsByRoom(roomId);
-    const room = this.data.rooms[roomId];
+    const participants = this.getParticipantsByRoom(roomId);
 
-    const entries: LeaderboardEntry[] = groups.map(g => {
-      const sub = this.data.submissions[g.id];
-      const memberNames = g.studentIds.map(sId => this.data.users[sId]?.name || sId);
+    let entries: LeaderboardEntry[] = [];
+    if (participants.length > 0) {
+      entries = participants.map(p => {
+        const sub = this.data.submissions[p.id];
+        if (!sub || !sub.score) {
+          return {
+            rank: 0,
+            participantId: p.id,
+            nickname: p.nickname,
+            avatar: p.avatar,
+            mcqScore: 0,
+            handScore: 0,
+            totalScore: 0,
+            isPendingReview: false,
+            isSubmitted: false,
+          };
+        }
 
-      if (!sub || !sub.score) {
         return {
           rank: 0,
-          groupId: g.id,
-          groupName: g.name,
-          members: memberNames,
-          mcqScore: 0,
-          handScore: 0,
-          totalScore: 0,
-          isPendingReview: false,
-          isSubmitted: false,
+          participantId: p.id,
+          nickname: p.nickname,
+          avatar: p.avatar,
+          mcqScore: sub.score.mcqScore,
+          handScore: sub.score.handScore,
+          totalScore: sub.score.totalScore,
+          isPendingReview: (sub.score.pendingReviewScore || 0) > 0,
+          isSubmitted: true,
+          submittedAt: sub.submittedAt,
+          isRevised: sub.isRevised,
         };
-      }
-
-      return {
+      });
+    } else {
+      const subs = Object.values(this.data.submissions).filter(s => s.roomId === roomId);
+      entries = subs.map(sub => ({
         rank: 0,
-        groupId: g.id,
-        groupName: g.name,
-        members: memberNames,
-        mcqScore: sub.score.mcqScore,
-        handScore: sub.score.handScore,
-        totalScore: sub.score.totalScore,
-        isPendingReview: sub.score.pendingReviewScore > 0,
+        participantId: sub.participantId || sub.id,
+        nickname: sub.nickname || 'Học sinh',
+        avatar: sub.avatar || 'cat',
+        mcqScore: sub.score?.mcqScore || 0,
+        handScore: sub.score?.handScore || 0,
+        totalScore: sub.score?.totalScore || 0,
+        isPendingReview: (sub.score?.pendingReviewScore || 0) > 0,
         isSubmitted: true,
         submittedAt: sub.submittedAt,
         isRevised: sub.isRevised,
-      };
-    });
+      }));
+    }
 
-    // Sắp xếp giảm dần theo totalScore (không phá hòa bằng thời gian)
+    // Sắp xếp giảm dần theo totalScore (học sinh bằng điểm đồng hạng, không phân bằng thời gian)
     entries.sort((a, b) => {
       if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-      return a.groupName.localeCompare(b.groupName);
+      return a.nickname.localeCompare(b.nickname);
     });
 
     // Gán thứ hạng: Bằng điểm = Đồng hạng!

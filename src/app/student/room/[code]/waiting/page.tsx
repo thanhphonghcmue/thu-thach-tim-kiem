@@ -4,7 +4,7 @@ import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import { getAvatarInfo } from '@/components/AvatarPicker';
-import { Room, Group, Participant } from '@/types';
+import { Room, Participant } from '@/types';
 import { Clock, Users, CheckCircle2, Sparkles, BookOpen, Check } from 'lucide-react';
 
 export default function StudentWaitingRoom({ params }: { params: Promise<{ code: string }> }) {
@@ -14,7 +14,6 @@ export default function StudentWaitingRoom({ params }: { params: Promise<{ code:
 
   const [currentParticipant, setCurrentParticipant] = useState<Participant | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
-  const [myGroup, setMyGroup] = useState<Group | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [togglingReady, setTogglingReady] = useState(false);
@@ -82,16 +81,13 @@ export default function StudentWaitingRoom({ params }: { params: Promise<{ code:
         const parts: Participant[] = data.participants || [];
         setParticipants(parts);
 
-        // Cập nhật lại bản thân nếu giáo viên đổi tên hoặc chuyển nhóm
+        // Cập nhật lại bản thân nếu giáo viên đổi tên
         const myLatest = parts.find(p => p.id === participantId);
         if (myLatest) {
           setCurrentParticipant(myLatest);
           setIsReady(myLatest.isReady);
           localStorage.setItem(`student_session_${roomCode}`, JSON.stringify(myLatest));
         }
-
-        const grp = data.groups?.find((g: any) => g.id === myLatest?.groupId || g.studentIds?.includes(participantId));
-        setMyGroup(grp || null);
       }
     } catch (err) {
       console.error(err);
@@ -156,8 +152,8 @@ export default function StudentWaitingRoom({ params }: { params: Promise<{ code:
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
               Chào {currentParticipant?.nickname || 'bạn'}!
             </h1>
-            <p className="text-xs sm:text-sm text-teal-100 mt-1">
-              Nhóm: <strong>{myGroup?.name || 'Đang xếp nhóm'}</strong> • Bạn đã vào phòng! Chờ giáo viên bắt đầu nhé.
+            <p className="text-xs sm:text-sm text-teal-100 mt-1 font-medium">
+              Bạn đã vào phòng! Chờ giáo viên bắt đầu nhé.
             </p>
           </div>
 
@@ -214,7 +210,6 @@ export default function StudentWaitingRoom({ params }: { params: Promise<{ code:
               {participants.map((p) => {
                 const av = getAvatarInfo(p.avatar);
                 const isMe = p.id === currentParticipant?.id;
-                const pGroup = room ? myGroup : null;
 
                 return (
                   <div

@@ -4,13 +4,14 @@ import { store } from '@/lib/store';
 export async function POST(request: Request, props: { params: Promise<{ code: string }> }) {
   try {
     const body = await request.json();
-    const { groupId, studentId, mcqAnswers, handTrace, isRevision } = body;
+    const { studentId, participantId, groupId, mcqAnswers, handTrace, isRevision } = body;
+    const targetId = studentId || participantId || groupId;
 
-    if (!groupId || !studentId || !mcqAnswers || !handTrace) {
+    if (!targetId || !mcqAnswers || !handTrace) {
       return NextResponse.json({ error: 'Thiếu dữ liệu nộp bài' }, { status: 400 });
     }
 
-    const result = store.submitGroup(groupId, studentId, mcqAnswers, handTrace, !!isRevision);
+    const result = store.submitStudent(targetId, mcqAnswers, handTrace, !!isRevision);
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }

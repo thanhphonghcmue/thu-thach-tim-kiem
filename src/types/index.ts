@@ -36,7 +36,7 @@ export type AvatarId = 'cat' | 'bear' | 'rabbit' | 'fox' | 'penguin' | 'dino' | 
 export interface Participant {
   id: string; // Mã định danh riêng (UUID)
   roomId: string;
-  groupId: string;
+  groupId?: string; // Tùy chọn (cho tương thích cũ)
   nickname: string;
   avatar: AvatarId;
   isReady: boolean;
@@ -46,26 +46,44 @@ export interface Participant {
   lastActive: string;
 }
 
-export interface GroupMemberInfo {
-  studentId: string;
-  name: string;
-  username: string;
+export interface StudentDraft {
+  participantId?: string;
+  mcqAnswers: Record<string, string>;
+  handTrace: HandTraceData;
+  activeQuestionIndex?: number;
+  updatedBy?: string;
+  updatedAt: string;
+  version: number;
+}
+
+export interface StudentSubmission {
+  id: string;
+  roomId: string;
+  participantId?: string;
+  groupId?: string; // Tương thích
+  nickname?: string;
   avatar?: AvatarId;
-  isReady?: boolean;
-  role: SuggestedRole;
-  isOnline: boolean;
-  lastActive: string;
+  mcqAnswers: Record<string, string>;
+  handTrace: HandTraceData;
+  submittedAt: string;
+  submittedBy?: string;
+  version: number;
+  score?: SubmissionScore;
+  isRevised?: boolean;
 }
 
 export interface Group {
   id: string;
   roomId: string;
-  name: string; // "Nhóm 1", "Nhóm 2", ...
+  name: string;
   studentIds: string[];
-  driverStudentId: string; // Chỉ người điều khiển mới sửa được bài chung
-  memberRoles: Record<string, SuggestedRole>;
+  driverStudentId?: string;
+  memberRoles?: Record<string, SuggestedRole>;
   lastSyncedAt?: string;
 }
+
+export type GroupSubmission = StudentSubmission;
+export type GroupDraft = StudentDraft;
 
 export interface Room {
   id: string;
@@ -177,27 +195,6 @@ export interface SubmissionScore {
   teacherAdjustments?: TeacherAdjustment[];
 }
 
-export interface GroupDraft {
-  mcqAnswers: Record<string, string>; // questionId -> optionId
-  handTrace: HandTraceData;
-  activeQuestionIndex: number; // Nhóm đang dừng ở câu nào (để giáo viên theo dõi)
-  updatedBy: string;
-  updatedAt: string;
-  version: number;
-}
-
-export interface GroupSubmission {
-  id: string;
-  roomId: string;
-  groupId: string;
-  mcqAnswers: Record<string, string>;
-  handTrace: HandTraceData;
-  submittedAt: string;
-  submittedBy: string;
-  version: number;
-  score?: SubmissionScore;
-  isRevised?: boolean;
-}
 
 export interface IndividualReflection {
   id: string;
@@ -211,9 +208,12 @@ export interface IndividualReflection {
 
 export interface LeaderboardEntry {
   rank: number;
-  groupId: string;
-  groupName: string;
-  members: string[];
+  participantId: string;
+  nickname: string;
+  avatar: AvatarId;
+  groupId?: string;
+  groupName?: string;
+  members?: string[];
   mcqScore: number;
   handScore: number;
   totalScore: number;

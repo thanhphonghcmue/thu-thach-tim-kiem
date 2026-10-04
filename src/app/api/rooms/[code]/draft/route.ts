@@ -3,26 +3,27 @@ import { store } from '@/lib/store';
 
 export async function GET(request: Request, props: { params: Promise<{ code: string }> }) {
   const { searchParams } = new URL(request.url);
-  const groupId = searchParams.get('groupId');
+  const targetId = searchParams.get('studentId') || searchParams.get('participantId') || searchParams.get('groupId');
 
-  if (!groupId) {
-    return NextResponse.json({ error: 'Thiếu groupId' }, { status: 400 });
+  if (!targetId) {
+    return NextResponse.json({ error: 'Thiếu định danh học sinh' }, { status: 400 });
   }
 
-  const draft = store.getDraft(groupId);
+  const draft = store.getDraft(targetId);
   return NextResponse.json({ draft });
 }
 
 export async function POST(request: Request, props: { params: Promise<{ code: string }> }) {
   try {
     const body = await request.json();
-    const { groupId, studentId, draft } = body;
+    const { studentId, participantId, groupId, draft } = body;
+    const targetId = studentId || participantId || groupId;
 
-    if (!groupId || !studentId || !draft) {
+    if (!targetId || !draft) {
       return NextResponse.json({ error: 'Thiếu dữ liệu lưu bản nháp' }, { status: 400 });
     }
 
-    const result = store.saveDraft(groupId, draft, studentId);
+    const result = store.saveDraft(targetId, draft, targetId);
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 403 });
     }

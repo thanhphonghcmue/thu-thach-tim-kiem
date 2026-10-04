@@ -7,19 +7,17 @@ import CppCodeViewer from '@/components/CppCodeViewer';
 import HandTraceStepView from '@/components/HandTraceStepView';
 import HandTraceTextView from '@/components/HandTraceTextView';
 import ConnectionStatus, { SyncState } from '@/components/ConnectionStatus';
-import RoleBadge from '@/components/RoleBadge';
-import { Room, Group, User, HandTraceData, GroupDraft } from '@/types';
+import { getAvatarInfo } from '@/components/AvatarPicker';
+import { Room, User, HandTraceData, AvatarId } from '@/types';
 import {
-  ShieldCheck,
   Send,
-  Users,
   CheckCircle2,
   AlertTriangle,
-  RotateCcw,
   Sparkles,
-  ArrowRight,
   BookOpen,
   MessageSquare,
+  Award,
+  ChevronRight,
 } from 'lucide-react';
 
 export default function StudentPlayArena({ params }: { params: Promise<{ code: string }> }) {
@@ -28,11 +26,11 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
   const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
+  const [avatar, setAvatar] = useState<AvatarId>('cat');
   const [room, setRoom] = useState<Room | null>(null);
-  const [myGroup, setMyGroup] = useState<any | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
 
-  // Trạng thái bài làm của nhóm
+  // Trạng thái bài làm cá nhân của học sinh
   const [mcqAnswers, setMcqAnswers] = useState<Record<string, string>>({});
   const [handTraceData, setHandTraceData] = useState<HandTraceData>({
     steps: [
@@ -61,9 +59,6 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
   const [reflectionText, setReflectionText] = useState('');
   const [reflectionSaved, setReflectionSaved] = useState(false);
 
-  // Modal đổi người điều khiển
-  const [showDriverSwapModal, setShowDriverSwapModal] = useState(false);
-
   useEffect(() => {
     let studentId = '';
     const partSaved = localStorage.getItem(`student_session_${roomCode}`);
@@ -71,6 +66,7 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
       try {
         const p = JSON.parse(partSaved);
         studentId = p.id;
+        if (p.avatar) setAvatar(p.avatar);
         setUser({
           id: p.id,
           role: 'student',
@@ -87,6 +83,7 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
         try {
           const u = JSON.parse(saved);
           studentId = u.id;
+          if (u.avatar) setAvatar(u.avatar);
           setUser(u);
         } catch (e) {}
       }
@@ -104,33 +101,22 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
     eventSource.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data);
-        if (payload.type === 'group_draft_updated' && payload.data.groupId === myGroup?.id) {
-          // Nếu người khác lưu bản nháp, cập nhật giao diện thành viên
-          if (payload.data.draft.updatedBy !== studentId) {
-            setMcqAnswers(payload.data.draft.mcqAnswers || {});
-            if (payload.data.draft.handTrace) {
-              setHandTraceData(payload.data.draft.handTrace);
-            }
-            setLastSyncedAt(payload.data.draft.updatedAt);
-          }
-        } else if (payload.type === 'scores_published' || (payload.type === 'room_updated' && payload.data.status === 'published')) {
+        if (payload.type === 'scores_published' || (payload.type === 'room_updated' && payload.data?.status === 'published')) {
           router.push(`/student/room/${roomCode}/result`);
-        } else if (payload.type === 'driver_changed' && payload.data.groupId === myGroup?.id) {
-          loadRoomAndDraft(studentId);
         }
       } catch (err) {}
     };
 
-    // Định kỳ đồng bộ 4 giây
+    // Định kỳ đồng bộ kiểm tra trạng thái phòng mỗi 5 giây
     const interval = setInterval(() => {
       loadRoomAndDraft(studentId);
-    }, 4000);
+    }, 5000);
 
     return () => {
       eventSource.close();
       clearInterval(interval);
     };
-  }, [roomCode, myGroup?.id]);
+  }, [roomCode]);
 
   const loadRoomAndDraft = async (studentId: string) => {
     try {
@@ -147,20 +133,23 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
 
         setQuestions(data.questions || []);
 
-        const g = data.groups?.find((grp: any) => grp.studentIds.includes(studentId));
-        if (g) {
-          setMyGroup(g);
-          if (g.submission?.submittedAt) {
-            setIsSubmitted(true);
-          }
+        // Khôi phục bài nộp nếu đã nộp
+        const mySub = data.mySubmission || data.submission;
+        if (mySub?.submittedAt) {
+          setIsSubmitted(true);
+        }
 
-          // Khôi phục bản nháp nếu chưa nộp
-          if (!g.submission?.submittedAt && g.draft) {
-            setMcqAnswers(g.draft.mcqAnswers || {});
-            if (g.draft.handTrace && g.draft.handTrace.steps?.length > 0) {
-              setHandTraceData(g.draft.handTrace);
-            }
-            setLastSyncedAt(g.draft.updatedAt);
+        // Khôi phục bản nháp nếu chưa nộp
+        const myDraft = data.myDraft || data.draft;
+        if (!mySub?.submittedAt && myDraft) {
+          if (myDraft.mcqAnswers && Object.keys(myDraft.mcqAnswers).length > 0) {
+            setMcqAnswers(myDraft.mcqAnswers);
+          }
+          if (myDraft.handTrace && myDraft.handTrace.steps?.length > 0) {
+            setHandTraceData(myDraft.handTrace);
+          }
+          if (myDraft.updatedAt) {
+            setLastSyncedAt(myDraft.updatedAt);
           }
         }
       }
@@ -170,16 +159,14 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
     }
   };
 
-  const isDriver = myGroup && user && myGroup.driverStudentId === user.id;
-
-  // Tự động lưu bản nháp lên máy chủ (Chỉ khi là Driver)
+  // Tự động lưu bản nháp cá nhân lên máy chủ
   const triggerAutoSave = async (updatedMcq: Record<string, string>, updatedHand: HandTraceData) => {
-    if (!isDriver || !myGroup || isSubmitted) return;
+    if (!user || isSubmitted) return;
 
     setSyncState('saving');
     // Lưu tạm vào localStorage làm bản nháp ngoại tuyến phòng khi mất mạng
     try {
-      localStorage.setItem(`offline_draft_${myGroup.id}`, JSON.stringify({
+      localStorage.setItem(`offline_draft_${user.id}`, JSON.stringify({
         mcqAnswers: updatedMcq,
         handTrace: updatedHand,
         timestamp: Date.now(),
@@ -191,8 +178,8 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          groupId: myGroup.id,
-          studentId: user?.id,
+          studentId: user.id,
+          participantId: user.id,
           draft: {
             mcqAnswers: updatedMcq,
             handTrace: updatedHand,
@@ -212,20 +199,20 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
   };
 
   const handleMcqSelect = (qId: string, optId: string) => {
-    if (!isDriver || isSubmitted) return;
+    if (isSubmitted) return;
     const nextAnswers = { ...mcqAnswers, [qId]: optId };
     setMcqAnswers(nextAnswers);
     triggerAutoSave(nextAnswers, handTraceData);
   };
 
   const handleHandTraceChange = (newHandData: HandTraceData) => {
-    if (!isDriver || isSubmitted) return;
+    if (isSubmitted) return;
     setHandTraceData(newHandData);
     triggerAutoSave(mcqAnswers, newHandData);
   };
 
   const handleSubmitOfficial = async () => {
-    if (!isDriver || !myGroup || isSubmitted) return;
+    if (!user || isSubmitted) return;
 
     setSubmitting(true);
     try {
@@ -233,8 +220,8 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          groupId: myGroup.id,
-          studentId: user?.id,
+          studentId: user.id,
+          participantId: user.id,
           mcqAnswers,
           handTrace: handTraceData,
         }),
@@ -263,7 +250,6 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
         body: JSON.stringify({
           studentId: user.id,
           studentName: user.name,
-          groupId: myGroup?.id,
           content: reflectionText.trim(),
         }),
       });
@@ -276,74 +262,31 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
     }
   };
 
-  const handleHandoverDriver = async (targetStudentId: string) => {
-    if (!myGroup || !user) return;
-    try {
-      const res = await fetch(`/api/rooms/${roomCode}/switch-driver`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId: myGroup.id,
-          requesterStudentId: user.id,
-          newDriverStudentId: targetStudentId,
-        }),
-      });
-
-      if (res.ok) {
-        setShowDriverSwapModal(false);
-        loadRoomAndDraft(user.id);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const currentDriver = myGroup?.members?.find((m: any) => m.id === myGroup.driverStudentId);
+  const avInfo = getAvatarInfo(avatar);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-16">
       <Header currentUser={user} roomCode={roomCode} />
 
       <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-6 w-full space-y-6">
-        {/* Thanh trạng thái nhóm và kết nối mạng */}
+        {/* Thanh trạng thái cá nhân học sinh và kết nối mạng */}
         <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="font-extrabold text-base text-slate-800">
-              {myGroup?.name || 'Nhóm'}
-            </span>
-            <RoleBadge isDriver={isDriver} />
+          <div className="flex items-center gap-2.5">
+            <span className="text-3xl leading-none">{avInfo.emoji}</span>
+            <div>
+              <span className="font-extrabold text-sm sm:text-base text-slate-800 block">
+                {user?.name || 'Học sinh'}
+              </span>
+              <span className="text-[11px] text-teal-600 font-semibold block">
+                Bài làm cá nhân • Phòng {roomCode}
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
             <ConnectionStatus status={syncState} lastSyncedAt={lastSyncedAt} />
-
-            <button
-              onClick={() => setShowDriverSwapModal(true)}
-              className="text-xs text-sky-700 bg-sky-50 hover:bg-sky-100 px-3 py-1.5 rounded-lg border border-sky-200 font-semibold flex items-center gap-1 transition-colors"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Đổi người thao tác
-            </button>
           </div>
         </div>
-
-        {/* Thông báo phân quyền nếu không phải là Driver */}
-        {!isDriver && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>
-                Bạn <strong>{currentDriver?.name || 'thành viên khác'}</strong> đang giữ quyền điều khiển thao tác. Màn hình của em đang đồng bộ tiến độ thời gian thực.
-              </span>
-            </div>
-            <button
-              onClick={() => handleHandoverDriver(user?.id || '')}
-              className="underline font-bold text-amber-800 shrink-0 hover:text-amber-950"
-            >
-              Nhận quyền điều khiển
-            </button>
-          </div>
-        )}
 
         {/* Màn hình tra cứu mã C++ chuẩn */}
         <CppCodeViewer defaultOpen={false} />
@@ -385,13 +328,13 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
                       <button
                         key={opt.id}
                         type="button"
-                        disabled={!isDriver || isSubmitted}
+                        disabled={isSubmitted}
                         onClick={() => handleMcqSelect(q.id, opt.id)}
                         className={`text-left p-3 rounded-xl border text-xs transition-all ${
                           isSelected
                             ? 'bg-sky-600 text-white border-sky-600 font-semibold shadow-sm'
                             : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
-                        } ${(!isDriver || isSubmitted) ? 'cursor-default opacity-85' : 'cursor-pointer'}`}
+                        } ${isSubmitted ? 'cursor-default opacity-85' : 'cursor-pointer'}`}
                       >
                         {opt.text}
                       </button>
@@ -400,24 +343,6 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Lời nhắc sư phạm đổi người điều khiển */}
-          <div className="p-4 rounded-xl bg-gradient-to-r from-teal-50 to-sky-50 border border-teal-200 text-teal-950 flex flex-wrap items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <span className="font-bold text-xs block text-teal-900">
-                🔄 Lời nhắc sư phạm: Chuyển sang phần Chạy tay
-              </span>
-              <p className="text-xs text-teal-800">
-                Hãy đổi người thao tác để mọi thành viên trong nhóm đều được trực tiếp thực hành!
-              </p>
-            </div>
-            <button
-              onClick={() => setShowDriverSwapModal(true)}
-              className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
-            >
-              Đổi người điều khiển nhóm
-            </button>
           </div>
         </div>
 
@@ -439,7 +364,7 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
               <button
                 type="button"
                 onClick={() => setHandMode('step')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
                   handMode === 'step'
                     ? 'bg-white text-sky-700 shadow-xs'
                     : 'text-slate-500 hover:text-slate-700'
@@ -450,7 +375,7 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
               <button
                 type="button"
                 onClick={() => setHandMode('text')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
                   handMode === 'text'
                     ? 'bg-white text-sky-700 shadow-xs'
                     : 'text-slate-500 hover:text-slate-700'
@@ -465,13 +390,13 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
             <HandTraceStepView
               data={handTraceData}
               onChange={handleHandTraceChange}
-              disabled={!isDriver || isSubmitted}
+              disabled={isSubmitted}
             />
           ) : (
             <HandTraceTextView
               data={handTraceData}
               onApplyParsed={handleHandTraceChange}
-              disabled={!isDriver || isSubmitted}
+              disabled={isSubmitted}
             />
           )}
         </div>
@@ -480,31 +405,43 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
         {!isSubmitted ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-md text-center space-y-3">
             <h3 className="font-bold text-slate-800 text-sm">
-              Hoàn thành và Nộp bài thi chính thức
+              Hoàn thành và Nộp bài thi cá nhân
             </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Chỉ Người điều khiển mới được bấm nộp. Sau khi nộp, câu trả lời sẽ được lưu chính thức trên hệ thống và chuyển sang giai đoạn chấm điểm.
+              Sau khi bấm nộp bài, câu trả lời của em sẽ được lưu chính thức trên hệ thống và chuyển sang giai đoạn chấm điểm.
             </p>
 
             <button
               type="button"
-              disabled={!isDriver}
               onClick={() => setShowSubmitModal(true)}
-              className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-600/20 inline-flex items-center gap-2 transition-all"
+              className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-600/20 inline-flex items-center gap-2 transition-all cursor-pointer"
             >
               <Send className="w-4 h-4" />
-              Nộp bài làm của nhóm
+              Nộp bài thi của em
             </button>
           </div>
         ) : (
-          <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-6 text-center space-y-3 shadow-xs">
+          <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-6 text-center space-y-4 shadow-xs">
             <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-            <h3 className="font-black text-emerald-950 text-base">
-              Nhóm đã nộp bài thành công!
-            </h3>
-            <p className="text-xs text-emerald-800 max-w-md mx-auto">
-              Bài thi của nhóm đã được lưu an toàn. Vui lòng quan sát màn hình máy chiếu hoặc chờ Giáo viên công bố đáp án và biểu điểm chi tiết.
-            </p>
+            <div>
+              <h3 className="font-black text-emerald-950 text-base">
+                Em đã nộp bài thành công!
+              </h3>
+              <p className="text-xs text-emerald-800 max-w-md mx-auto mt-1">
+                Bài thi cá nhân của em đã được lưu an toàn. Vui lòng quan sát màn hình máy chiếu hoặc chờ Thầy/Cô công bố đáp án và biểu điểm chi tiết.
+              </p>
+            </div>
+
+            {room?.status === 'published' && (
+              <button
+                onClick={() => router.push(`/student/room/${roomCode}/result`)}
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md inline-flex items-center gap-1.5 transition-colors"
+              >
+                <Award className="w-4 h-4" />
+                Xem kết quả & Biểu điểm chi tiết
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
 
@@ -512,7 +449,7 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
             <MessageSquare className="w-4 h-4 text-sky-600" />
-            <span>Chặng 3: Suy ngẫm cá nhân (Mỗi học sinh ghi riêng)</span>
+            <span>Chặng 3: Suy ngẫm cá nhân (Nhật ký học tập)</span>
           </div>
 
           <form onSubmit={handleSaveReflection} className="space-y-3">
@@ -525,19 +462,19 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
                 onChange={(e) => setReflectionText(e.target.value)}
                 disabled={reflectionSaved}
                 rows={3}
-                placeholder="VD: Em đã hiểu rõ vì sao mid = left + (right - left) / 2 tránh tràn số và nhận ra chỉ số bắt đầu từ 0..."
+                placeholder="VD: Em đã hiểu rõ vì sao mid = left + (right - left) / 2 tránh tràn số và nhận ra chỉ số mảng bắt đầu từ 0..."
                 className="w-full p-3 text-xs border rounded-xl border-slate-300 focus:ring-2 focus:ring-sky-500 bg-white leading-relaxed resize-none"
               />
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-[11px] text-slate-400">
-                *Ghi chú cá nhân không tính vào điểm nhóm, nhưng Giáo viên xem được để nhận xét.
+                *Ghi chú của em giúp Thầy/Cô theo dõi mức độ tiếp thu bài học.
               </span>
               <button
                 type="submit"
                 disabled={reflectionSaved || !reflectionText.trim()}
-                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-xs"
+                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
               >
                 {reflectionSaved ? 'Đã gửi ghi chú' : 'Gửi ghi chú riêng'}
               </button>
@@ -552,17 +489,17 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
           <div className="bg-white rounded-2xl max-w-md w-full p-6 text-center space-y-4">
             <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto" />
             <h3 className="text-lg font-bold text-slate-800">
-              Xác nhận nộp bài chính thức?
+              Xác nhận nộp bài thi cá nhân?
             </h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Các câu trả lời của nhóm sẽ được khóa và gửi lên hệ thống máy chủ để chấm điểm. Hãy chắc chắn rằng cả nhóm đã thống nhất câu trả lời!
+              Các câu trả lời của em sẽ được gửi lên máy chủ để chấm điểm. Em có chắc chắn muốn nộp bài bây giờ không?
             </p>
 
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowSubmitModal(false)}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold"
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
               >
                 Kiểm tra lại
               </button>
@@ -570,52 +507,11 @@ export default function StudentPlayArena({ params }: { params: Promise<{ code: s
                 type="button"
                 disabled={submitting}
                 onClick={handleSubmitOfficial}
-                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md"
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer"
               >
                 {submitting ? 'Đang nộp...' : 'Đồng ý nộp bài'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal đổi người điều khiển */}
-      {showDriverSwapModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-base font-bold text-slate-800">
-              Đổi người điều khiển nhóm
-            </h3>
-            <p className="text-xs text-slate-500">
-              Chọn thành viên sẽ nhận quyền thao tác máy:
-            </p>
-
-            <div className="space-y-2">
-              {myGroup?.members?.map((m: any) => {
-                const isCur = m.id === myGroup.driverStudentId;
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => handleHandoverDriver(m.id)}
-                    className={`w-full p-3 rounded-xl border text-xs flex items-center justify-between ${
-                      isCur
-                        ? 'bg-amber-50 border-amber-300 font-bold text-amber-900'
-                        : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
-                    }`}
-                  >
-                    <span>{m.name}</span>
-                    {isCur ? <span>(Đang giữ quyền)</span> : <span>Chuyển cho bạn này</span>}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={() => setShowDriverSwapModal(false)}
-              className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold"
-            >
-              Hủy
-            </button>
           </div>
         </div>
       )}

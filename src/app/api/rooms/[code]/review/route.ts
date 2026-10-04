@@ -6,18 +6,23 @@ export async function POST(request: Request, props: { params: Promise<{ code: st
     const params = await props.params;
     const { code } = params;
     const body = await request.json();
-    const { teacherId, groupId, criterion, originalPts, adjustedPts, reason } = body;
+    const { teacherId, participantId, studentId, groupId, criterion, originalPts, adjustedPts, reason } = body;
+    const targetId = participantId || studentId || groupId;
 
     const room = store.getRoomByCode(code);
     if (!room || room.teacherId !== teacherId) {
       return NextResponse.json({ error: 'Không có quyền duyệt điểm' }, { status: 403 });
     }
 
+    if (!targetId) {
+      return NextResponse.json({ error: 'Thiếu định danh học sinh cần duyệt điểm' }, { status: 400 });
+    }
+
     if (!reason || reason.trim() === '') {
       return NextResponse.json({ error: 'Vui lòng nhập lý do điều chỉnh điểm' }, { status: 400 });
     }
 
-    const result = store.adjustScore(groupId, {
+    const result = store.adjustScore(targetId, {
       criterion: criterion || 'explanation',
       originalPts: Number(originalPts) || 0,
       adjustedPts: Number(adjustedPts) || 0,

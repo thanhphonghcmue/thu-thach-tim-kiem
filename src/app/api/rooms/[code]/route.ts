@@ -36,69 +36,44 @@ export async function GET(request: Request, props: { params: Promise<{ code: str
     return q;
   }).filter(Boolean);
 
-  const groups = store.getGroupsByRoom(room.id);
-  const enhancedGroups = groups.map(g => {
-    const members = g.studentIds.map(sId => {
-      const p = store.getParticipantById(sId);
-      if (p) {
-        return {
-          id: p.id,
-          name: p.nickname,
-          nickname: p.nickname,
-          avatar: p.avatar,
-          isReady: p.isReady,
-          isOnline: p.isOnline,
-          role: p.role || g.memberRoles[p.id] || 'verifier',
-          lastActive: p.lastActive,
-        };
-      }
-      const u = store.getUserById(sId);
-      if (u) {
-        return {
-          id: u.id,
-          name: u.name,
-          nickname: u.name,
-          avatar: 'cat',
-          isReady: true,
-          isOnline: true,
-          role: g.memberRoles[u.id] || 'verifier',
-          lastActive: u.createdAt,
-        };
-      }
-      return null;
-    }).filter(Boolean);
+  const allParticipants = store.getParticipantsByRoom(room.id);
+  const enhancedParticipants = allParticipants.map(p => {
+    const isMe = studentId && p.id === studentId;
+    const canView = isTeacher || isMe;
+    const draft = canView ? store.getDraft(p.id) : undefined;
+    const rawSub = store.getSubmission(p.id);
 
-    const draft = store.getDraft(g.id);
-    const submission = store.getSubmission(g.id);
-
-    // Bảo mật bài nộp: Học sinh không xem được điểm và bài nhóm khác trước khi công bố
-    let visibleSubmission = undefined;
-    if (submission) {
-      if (isTeacher || isPublished || g.studentIds.includes(studentId || '')) {
-        visibleSubmission = {
-          ...submission,
-          // Nếu học sinh xem nhóm mình nhưng chưa công bố, giấu điểm
-          score: (!isPublished && !isTeacher) ? undefined : submission.score,
-        };
-      }
+    let submission = undefined;
+    if (rawSub && (canView || isPublished)) {
+      submission = {
+        ...rawSub,
+        score: (!isPublished && !isTeacher) ? undefined : rawSub.score,
+      };
     }
 
     return {
-      ...g,
-      members,
-      draft: (isTeacher || g.studentIds.includes(studentId || '')) ? draft : undefined,
-      submission: visibleSubmission,
+      ...p,
+      draft,
+      submission,
     };
   });
 
-  const allParticipants = store.getParticipantsByRoom(room.id);
+  const myDraft = studentId ? store.getDraft(studentId) : undefined;
+  const rawMySub = studentId ? store.getSubmission(studentId) : undefined;
+  const mySubmission = rawMySub ? {
+    ...rawMySub,
+    score: (!isPublished && !isTeacher) ? undefined : rawMySub.score,
+  } : undefined;
+
   const leaderboard = (isPublished || isTeacher) ? store.getLeaderboard(room.id) : [];
 
   return NextResponse.json({
     room,
     questions,
-    groups: enhancedGroups,
-    participants: allParticipants,
+    groups: [],
+    participants: enhancedParticipants,
+    myDraft,
+    mySubmission,
     leaderboard,
   });
 }

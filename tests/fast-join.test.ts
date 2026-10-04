@@ -4,17 +4,16 @@ import { store } from '../src/lib/store';
 
 let freshRoomCode = '';
 
-test('Setup: Tạo phòng riêng cho Fast Join', () => {
+test('Setup: Tạo phòng riêng cho Fast Join Cá Nhân', () => {
   const teacher = store.getUserByUsername('giaovien')!;
   const classes = store.getClassesByTeacher(teacher.id);
 
-  const { room, groups } = store.createRoom(
+  const { room } = store.createRoom(
     teacher.id,
-    classes[0].id,
-    `Phòng Fast Join ${Date.now()}`,
+    classes[0]?.id || 'class-11a1',
+    `Phòng Fast Join Cá Nhân ${Date.now()}`,
     ['mcq-1', 'mcq-2', 'mcq-3', 'mcq-4', 'mcq-5'],
-    9,
-    2
+    9
   );
 
   freshRoomCode = room.code;
@@ -23,23 +22,18 @@ test('Setup: Tạo phòng riêng cho Fast Join', () => {
 
 test('Fast Join 1: Học sinh tham gia nhanh bằng biệt danh và avatar không cần tài khoản', () => {
   const room = store.getRoomByCode(freshRoomCode)!;
-  const groups = store.getGroupsByRoom(room.id);
 
   // Học sinh 1 tham gia
-  const join1 = store.joinRoomParticipant(room.code, 'Bé Mèo Dễ Thương', 'cat', groups[0].id);
+  const join1 = store.joinRoomParticipant(room.code, 'Bé Mèo Dễ Thương', 'cat');
   assert.equal(join1.success, true);
   assert.equal(join1.participant?.nickname, 'Bé Mèo Dễ Thương');
   assert.equal(join1.participant?.avatar, 'cat');
-  assert.equal(join1.participant?.groupId, groups[0].id);
   assert.equal(join1.participant?.isReady, false);
-
-  const g1 = store.getGroupById(groups[0].id);
-  assert.equal(g1?.studentIds.includes(join1.participant?.id!), true);
-  assert.ok(g1?.driverStudentId);
+  assert.equal(join1.participant?.isOnline, true);
 });
 
 test('Fast Join 2: Xử lý trùng biệt danh trong cùng phòng (thêm số tự động)', () => {
-  // Tham gia cùng tên "Minh Anh" trong phòng mới
+  // Tham gia cùng tên "Minh Anh" trong phòng
   const joinA = store.joinRoomParticipant(freshRoomCode, 'Minh Anh', 'rabbit');
   const joinB = store.joinRoomParticipant(freshRoomCode, 'Minh Anh', 'panda');
 
@@ -64,10 +58,9 @@ test('Fast Join 3: Học sinh bật/tắt trạng thái Sẵn sàng', () => {
   assert.equal(p?.isReady, false);
 });
 
-test('Fast Join 4: Giáo viên đổi tên, chuyển nhóm và loại học sinh khỏi phòng', () => {
+test('Fast Join 4: Giáo viên đổi tên và loại học sinh khỏi phòng', () => {
   const room = store.getRoomByCode(freshRoomCode)!;
-  const groups = store.getGroupsByRoom(room.id);
-  const join = store.joinRoomParticipant(freshRoomCode, 'Học Sinh Lạ', 'fox', groups[0].id);
+  const join = store.joinRoomParticipant(freshRoomCode, 'Học Sinh Lạ', 'fox');
   const pId = join.participant?.id!;
 
   // 1. Giáo viên đổi tên
@@ -75,14 +68,7 @@ test('Fast Join 4: Giáo viên đổi tên, chuyển nhóm và loại học sinh
   assert.equal(renameRes.success, true);
   assert.equal(store.getParticipantById(pId)?.nickname, 'Nguyễn Văn Em');
 
-  // 2. Giáo viên chuyển nhóm
-  if (groups.length > 1) {
-    const moveRes = store.manageParticipant(room.code, room.teacherId, pId, 'move_group', { targetGroupId: groups[1].id });
-    assert.equal(moveRes.success, true);
-    assert.equal(store.getParticipantById(pId)?.groupId, groups[1].id);
-  }
-
-  // 3. Giáo viên loại khỏi phòng (kick)
+  // 2. Giáo viên loại khỏi phòng (kick)
   const kickRes = store.manageParticipant(room.code, room.teacherId, pId, 'kick', {});
   assert.equal(kickRes.success, true);
   assert.equal(store.getParticipantById(pId), undefined);

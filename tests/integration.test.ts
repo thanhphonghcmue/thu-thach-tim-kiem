@@ -1,87 +1,78 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { store } from '../src/lib/store';
-import { Room, Group } from '../src/types';
+import { Room } from '../src/types';
 
 let testRoom: Room;
-let testGroups: Group[];
+let student1Id: string;
+let student2Id: string;
 
-test('Setup: Tạo phòng kiểm thử riêng biệt', () => {
+test('Setup: Tạo phòng kiểm thử cá nhân riêng biệt', () => {
   const teacher = store.getUserByUsername('giaovien')!;
   assert.ok(teacher);
   const classes = store.getClassesByTeacher(teacher.id);
-  assert.ok(classes.length > 0);
 
   const selectedQuestions = ['mcq-1', 'mcq-2', 'mcq-3', 'mcq-4', 'mcq-5'];
   const res = store.createRoom(
     teacher.id,
-    classes[0].id,
-    `Phòng Test Tự Động ${Date.now()}`,
+    classes[0]?.id || 'class-11a1',
+    `Phòng Test Cá Nhân ${Date.now()}`,
     selectedQuestions,
-    9,
-    3
+    9
   );
 
   testRoom = res.room;
-  testGroups = res.groups;
-
   assert.ok(testRoom);
-  assert.equal(testGroups.length, 3);
-});
-
-test('Integration Test 1: Trạng thái ban đầu và cấu trúc nhóm', () => {
   assert.equal(testRoom.status, 'waiting');
-  assert.equal(testGroups[0].studentIds.length > 0, true);
-  assert.ok(testGroups[0].driverStudentId);
 });
 
-test('Integration Test 2: Bảo vệ quyền - Chỉ Người điều khiển (Driver) mới được sửa bản nháp', () => {
+test('Integration Test 1: Hai học sinh tham gia độc lập bằng biệt danh và avatar', () => {
+  const join1 = store.joinRoomParticipant(testRoom.code, 'An Nhiên', 'cat');
+  const join2 = store.joinRoomParticipant(testRoom.code, 'Bảo Long', 'dino');
+
+  assert.equal(join1.success, true);
+  assert.equal(join2.success, true);
+
+  student1Id = join1.participant!.id;
+  student2Id = join2.participant!.id;
+
+  assert.notEqual(student1Id, student2Id);
+  assert.equal(join1.participant?.avatar, 'cat');
+  assert.equal(join2.participant?.avatar, 'dino');
+});
+
+test('Integration Test 2: Từng học sinh lưu bản nháp riêng biệt trên máy chủ', () => {
   // Mở phòng sang running
   store.updateRoom(testRoom.id, { status: 'running' });
 
-  const group1 = testGroups[0];
-  const driverId = group1.driverStudentId;
-  const nonDriverId = group1.studentIds.find(id => id !== driverId);
-  assert.ok(nonDriverId);
-
-  // Non-driver cố lưu nháp
-  const invalidSave = store.saveDraft(
-    group1.id,
+  // Học sinh 1 lưu câu 1 chọn opt-1-a
+  const draft1 = store.saveDraft(
+    student1Id,
     { mcqAnswers: { 'mcq-1': 'opt-1-a' } },
-    nonDriverId
+    student1Id
   );
-  assert.equal(invalidSave.success, false);
-  assert.match(invalidSave.error || '', /Chỉ Người điều khiển/);
+  assert.equal(draft1.success, true);
 
-  // Driver lưu nháp
-  const validSave = store.saveDraft(
-    group1.id,
-    { mcqAnswers: { 'mcq-1': 'opt-1-a' } },
-    driverId
+  // Học sinh 2 lưu câu 1 chọn opt-1-b
+  const draft2 = store.saveDraft(
+    student2Id,
+    { mcqAnswers: { 'mcq-1': 'opt-1-b' } },
+    student2Id
   );
-  assert.equal(validSave.success, true);
+  assert.equal(draft2.success, true);
+
+  // Bản nháp của 2 bạn độc lập hoàn toàn
+  const saved1 = store.getDraft(student1Id);
+  const saved2 = store.getDraft(student2Id);
+
+  assert.equal(saved1?.mcqAnswers['mcq-1'], 'opt-1-a');
+  assert.equal(saved2?.mcqAnswers['mcq-1'], 'opt-1-b');
 });
 
-test('Integration Test 3: Đổi người điều khiển hoạt động chính xác', () => {
-  const group1 = testGroups[0];
-  const oldDriver = group1.driverStudentId;
-  const newDriver = group1.studentIds.find(id => id !== oldDriver)!;
-
-  const updatedGroup = store.setGroupDriver(group1.id, newDriver);
-  assert.equal(updatedGroup?.driverStudentId, newDriver);
-
-  // Khôi phục driver cũ
-  store.setGroupDriver(group1.id, oldDriver);
-});
-
-test('Integration Test 4: Chống nộp bài lần 2 và chống sửa khi đã nộp', () => {
-  const group2 = testGroups[1];
-  const driver = group2.driverStudentId;
-
-  // Nộp lần 1: câu giải thích diễn đạt tự do (cần duyệt, pts: 0)
-  const sub1 = store.submitGroup(
-    group2.id,
-    driver,
+test('Integration Test 3: Chống nộp bài lần 2 và chống sửa khi đã nộp', () => {
+  // Học sinh 1 nộp bài thi
+  const sub1 = store.submitStudent(
+    student1Id,
     { 'mcq-1': 'opt-1-a' },
     {
       steps: [{ stepNumber: 1, left: 0, right: 7, mid: 3, aMid: 12, comparison: '<', action: 'keep_right', newLeft: 4, newRight: 7 }],
@@ -90,52 +81,49 @@ test('Integration Test 4: Chống nộp bài lần 2 và chống sửa khi đã 
       eliminationExplanation: 'Em thấy 12 bé hơn 38 nên bỏ nửa trước',
     }
   );
-  assert.equal(sub1.success, true, 'Nộp lần 1 thành công');
+
+  assert.equal(sub1.success, true, 'Nộp bài lần 1 thành công');
   assert.equal(sub1.submission?.score?.handBreakdown.conclusion.explanationStatus, 'pending_teacher_review');
 
-  // Cố nộp lần 2
-  const sub2 = store.submitGroup(
-    group2.id,
-    driver,
+  // Cố nộp lần 2 khi chưa mở lượt sửa
+  const sub1Again = store.submitStudent(
+    student1Id,
     { 'mcq-1': 'opt-1-b' },
-    { steps: [], finalIndex: '', checkCount: '', eliminationExplanation: '' }
+    { steps: [], finalIndex: 0, checkCount: 0, eliminationExplanation: '' }
   );
-  assert.equal(sub2.success, false, 'Không được phép nộp lần 2 khi chưa mở lượt sửa');
+  assert.equal(sub1Again.success, false, 'Phải chặn nộp lần 2');
 
   // Cố sửa nháp sau khi đã nộp
-  const editAfterSubmit = store.saveDraft(
-    group2.id,
-    { mcqAnswers: { 'mcq-1': 'opt-1-b' } },
-    driver
-  );
-  assert.equal(editAfterSubmit.success, false, 'Không được sửa nháp sau khi nộp');
+  const editAfterSubmit = store.saveDraft(student1Id, { mcqAnswers: { 'mcq-1': 'opt-1-c' } });
+  assert.equal(editAfterSubmit.success, false, 'Không được sửa nháp sau khi đã nộp');
 });
 
-test('Integration Test 5: Bằng điểm đồng hạng và hiển thị Tạm tính', () => {
-  const leaderboard = store.getLeaderboard(testRoom.id);
-  assert.ok(Array.isArray(leaderboard));
-
-  for (let i = 1; i < leaderboard.length; i++) {
-    if (leaderboard[i].totalScore === leaderboard[i - 1].totalScore) {
-      assert.equal(
-        leaderboard[i].rank,
-        leaderboard[i - 1].rank,
-        `Bằng điểm phải đồng hạng`
-      );
+test('Integration Test 4: Bằng điểm đồng hạng trên bảng xếp hạng cá nhân', () => {
+  // Học sinh 2 nộp bài giống hệt điểm với học sinh 1
+  const sub2 = store.submitStudent(
+    student2Id,
+    { 'mcq-1': 'opt-1-a' },
+    {
+      steps: [{ stepNumber: 1, left: 0, right: 7, mid: 3, aMid: 12, comparison: '<', action: 'keep_right', newLeft: 4, newRight: 7 }],
+      finalIndex: 6,
+      checkCount: 3,
+      eliminationExplanation: 'Vì 12 < 38 nên loại bỏ phần đầu',
     }
-  }
+  );
+  assert.equal(sub2.success, true);
+
+  const leaderboard = store.getLeaderboard(testRoom.id);
+  assert.equal(leaderboard.length, 2);
+
+  const p1Entry = leaderboard.find(e => e.participantId === student1Id)!;
+  const p2Entry = leaderboard.find(e => e.participantId === student2Id)!;
+
+  assert.equal(p1Entry.totalScore, p2Entry.totalScore);
+  assert.equal(p1Entry.rank, p2Entry.rank, 'Học sinh bằng điểm phải đồng hạng!');
 });
 
-test('Integration Test 6: Giáo viên duyệt giải thích, cộng điểm và ghi lý do', () => {
-  const group2 = testGroups[1];
-  const sub = store.getSubmission(group2.id);
-  assert.ok(sub && sub.score);
-
-  const oldTotal = sub.score.totalScore;
-  assert.equal(sub.score.handBreakdown.conclusion.explanationPts, 0);
-
-  // Giáo viên duyệt giải thích +0.50đ kèm lý do
-  const reviewResult = store.adjustScore(group2.id, {
+test('Integration Test 5: Giáo viên duyệt giải thích, cộng điểm và ghi lý do', () => {
+  const adjustRes = store.adjustScore(student1Id, {
     criterion: 'explanation',
     originalPts: 0,
     adjustedPts: 0.5,
@@ -143,9 +131,9 @@ test('Integration Test 6: Giáo viên duyệt giải thích, cộng điểm và 
     adjustedAt: new Date().toISOString(),
   });
 
-  assert.equal(reviewResult.success, true);
-  const updatedSub = store.getSubmission(group2.id)!;
+  assert.equal(adjustRes.success, true);
+  const updatedSub = store.getSubmission(student1Id)!;
+  assert.equal(updatedSub.score?.handBreakdown.conclusion.explanationStatus, 'accepted');
   assert.equal(updatedSub.score?.handBreakdown.conclusion.explanationPts, 0.5);
-  assert.equal(updatedSub.score?.totalScore, Number((oldTotal + 0.5).toFixed(2)));
-  assert.ok(updatedSub.score?.teacherAdjustments?.length! > 0, 'Phải ghi lại lý do điều chỉnh');
+  assert.equal(updatedSub.score?.teacherAdjustments?.[0].reason, 'Giải thích đúng bản chất dãy tăng dần');
 });

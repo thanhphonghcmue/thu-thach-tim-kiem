@@ -4,8 +4,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import AvatarPicker, { AVATARS } from '@/components/AvatarPicker';
-import { AvatarId, Room, Group } from '@/types';
-import { Sparkles, Users, ArrowRight, AlertCircle, QrCode } from 'lucide-react';
+import { AvatarId, Room } from '@/types';
+import { Sparkles, ArrowRight, AlertCircle, QrCode } from 'lucide-react';
 
 function JoinContent() {
   const router = useRouter();
@@ -14,13 +14,11 @@ function JoinContent() {
 
   const [roomCode, setRoomCode] = useState(initialRoom);
   const [room, setRoom] = useState<Room | null>(null);
-  const [groups, setGroups] = useState<Group[]>([]);
   const [checkingRoom, setCheckingRoom] = useState(false);
 
   // Dữ liệu học sinh nhập
   const [nickname, setNickname] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarId>('cat');
-  const [selectedGroupId, setSelectedGroupId] = useState('');
   const [error, setError] = useState('');
   const [joining, setJoining] = useState(false);
 
@@ -40,7 +38,6 @@ function JoinContent() {
           const parsed = JSON.parse(saved);
           if (parsed.nickname) setNickname(parsed.nickname);
           if (parsed.avatar) setSelectedAvatar(parsed.avatar);
-          if (parsed.groupId) setSelectedGroupId(parsed.groupId);
         }
       } catch (e) {}
     }
@@ -54,13 +51,8 @@ function JoinContent() {
       const data = await res.json();
       if (res.ok && data.room) {
         setRoom(data.room);
-        setGroups(data.groups || []);
-        if (data.groups && data.groups.length > 0 && !selectedGroupId) {
-          setSelectedGroupId(data.groups[0].id);
-        }
       } else {
         setRoom(null);
-        setGroups([]);
         if (code.length === 6) {
           setError(data.error || 'Phòng thi không tồn tại hoặc đã đóng');
         }
@@ -96,7 +88,6 @@ function JoinContent() {
         body: JSON.stringify({
           nickname: cleanName,
           avatar: selectedAvatar,
-          groupId: selectedGroupId,
         }),
       });
 
@@ -212,40 +203,6 @@ function JoinContent() {
               </label>
               <AvatarPicker selected={selectedAvatar} onSelect={setSelectedAvatar} />
             </div>
-
-            {/* 4. Chọn Nhóm (nếu phòng có chia nhóm) */}
-            {groups.length > 0 && (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                  <Users className="w-4 h-4 text-teal-600" />
-                  Chọn Nhóm của bạn:
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {groups.map((grp) => {
-                    const isSelected = selectedGroupId === grp.id;
-                    const memberCount = grp.studentIds?.length || 0;
-
-                    return (
-                      <button
-                        key={grp.id}
-                        type="button"
-                        onClick={() => setSelectedGroupId(grp.id)}
-                        className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-teal-50 border-teal-500 ring-2 ring-teal-200 font-bold text-teal-900 shadow-sm'
-                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
-                        }`}
-                      >
-                        <span className="block text-xs font-extrabold">{grp.name}</span>
-                        <span className="text-[11px] text-slate-400 font-normal">
-                          {memberCount} bạn đang có mặt
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Nút vào phòng chờ */}
             <button

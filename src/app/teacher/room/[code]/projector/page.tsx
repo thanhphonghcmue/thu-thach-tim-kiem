@@ -129,13 +129,13 @@ export default function ProjectorView({ params }: { params: Promise<{ code: stri
           </div>
         </div>
 
-        {/* Cột Bảng xếp hạng & Kết quả các nhóm */}
+        {/* Cột Bảng xếp hạng & Kết quả cá nhân */}
         <div className="lg:col-span-8 bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
               <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
                 <Award className="w-6 h-6 text-amber-400" />
-                BẢNG XẾP HẠNG THI ĐUA CÁC NHÓM
+                BẢNG XẾP HẠNG THI ĐUA CÁ NHÂN
               </h2>
               <span className="text-xs text-slate-400">
                 {room?.status === 'published' ? 'Đã công bố chính thức' : 'Cập nhật trực tiếp'}
@@ -144,7 +144,7 @@ export default function ProjectorView({ params }: { params: Promise<{ code: stri
 
             {leaderboard.length === 0 ? (
               <div className="text-center py-16 text-slate-500 text-base">
-                Đang chờ các nhóm nộp bài...
+                Đang chờ các bạn học sinh nộp bài...
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -152,7 +152,7 @@ export default function ProjectorView({ params }: { params: Promise<{ code: stri
                   <thead>
                     <tr className="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-400 font-bold">
                       <th className="py-3 px-4">Hạng</th>
-                      <th className="py-3 px-4">Nhóm</th>
+                      <th className="py-3 px-4">Học sinh</th>
                       <th className="py-3 px-4 text-center">Trắc nghiệm (/5)</th>
                       <th className="py-3 px-4 text-center">Chạy tay (/5)</th>
                       <th className="py-3 px-4 text-right">Tổng điểm (/10)</th>
@@ -160,6 +160,7 @@ export default function ProjectorView({ params }: { params: Promise<{ code: stri
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 font-sans">
                     {leaderboard.map((item, idx) => {
+                      const av = getAvatarInfo(item.avatar);
                       let rankBadge = (
                         <span className="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold flex items-center justify-center text-sm">
                           {item.rank || idx + 1}
@@ -188,15 +189,15 @@ export default function ProjectorView({ params }: { params: Promise<{ code: stri
 
                       return (
                         <tr
-                          key={item.groupId}
+                          key={item.participantId || idx}
                           className="hover:bg-slate-800/40 transition-colors"
                         >
                           <td className="py-4 px-4">{rankBadge}</td>
                           <td className="py-4 px-4 font-bold text-base sm:text-lg text-white">
-                            {item.groupName}
-                            <span className="block text-xs font-normal text-slate-400">
-                              {item.members.join(', ')}
-                            </span>
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-2xl leading-none">{av.emoji}</span>
+                              <span>{item.nickname}</span>
+                            </div>
                           </td>
                           <td className="py-4 px-4 text-center font-mono font-bold text-base text-sky-300">
                             {item.isSubmitted ? item.mcqScore.toFixed(2) : '-'}
@@ -212,7 +213,7 @@ export default function ProjectorView({ params }: { params: Promise<{ code: stri
                                 </span>
                                 {item.isPendingReview && (
                                   <span className="text-[10px] text-amber-300 font-semibold bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/60">
-                                    Tạm tính (Chờ duyệt)
+                                    Chờ duyệt giải thích
                                   </span>
                                 )}
                               </div>

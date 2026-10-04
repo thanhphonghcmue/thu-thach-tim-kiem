@@ -34,7 +34,8 @@ export default function QRCodeCard({ roomCode }: QRCodeCardProps) {
 
   useEffect(() => {
     if (roomCode) {
-      fetchQr();
+      const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : undefined;
+      fetchQr(origin);
     }
   }, [roomCode]);
 
@@ -99,18 +100,18 @@ export default function QRCodeCard({ roomCode }: QRCodeCardProps) {
       </div>
 
       {/* Thông tin URL thực tế */}
-      <div className="w-full bg-slate-50 p-2.5 rounded-xl border border-slate-200 mb-4 text-left">
-        <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
-          <span className="flex items-center gap-1 font-medium">
-            <Wifi className="w-3.5 h-3.5 text-sky-600" />
-            Đường dẫn truy cập cho học sinh:
+      <div className="w-full bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4 text-left space-y-2">
+        <div className="flex items-center justify-between text-[11px] text-slate-500">
+          <span className="flex items-center gap-1 font-bold text-sky-800">
+            <Globe className="w-3.5 h-3.5 text-sky-600" />
+            Đường dẫn QR trực tiếp:
           </span>
           <button
             onClick={() => setIsEditingHost(!isEditingHost)}
             className="text-sky-600 hover:text-sky-800 flex items-center gap-0.5 text-[11px]"
           >
             <Edit3 className="w-3 h-3" />
-            Đổi IP / Host
+            Tùy chỉnh Host
           </button>
         </div>
 
@@ -120,7 +121,7 @@ export default function QRCodeCard({ roomCode }: QRCodeCardProps) {
               type="text"
               value={customHost}
               onChange={(e) => setCustomHost(e.target.value)}
-              placeholder="VD: http://192.168.1.100:3000"
+              placeholder="VD: https://thu-thach-tim-kiem.onrender.com"
               className="flex-1 px-2 py-1 text-xs border rounded bg-white font-mono"
             />
             <button
@@ -131,10 +132,14 @@ export default function QRCodeCard({ roomCode }: QRCodeCardProps) {
             </button>
           </form>
         ) : (
-          <p className="font-mono text-xs text-sky-900 break-all select-all font-semibold">
+          <p className="font-mono text-xs text-sky-950 break-all select-all font-bold bg-white p-2 rounded border border-slate-200">
             {joinUrl}
           </p>
         )}
+
+        <div className="text-[11px] text-slate-600 bg-sky-50/70 p-2 rounded border border-sky-100">
+          💡 <strong>Cách vào dự phòng:</strong> Nếu học sinh không quét được QR, truy cập trang chủ chọn <strong>"Vào phòng chơi"</strong> hoặc mở <code className="bg-white px-1.5 py-0.5 rounded font-mono font-bold text-sky-800">/join</code> và nhập mã phòng: <strong className="font-mono text-sky-900 font-extrabold">{roomCode}</strong>.
+        </div>
       </div>
 
       {/* Nút thao tác nhanh: Sao chép link & Tải ảnh về Canva */}

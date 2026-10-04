@@ -22,6 +22,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Vui lòng điền đủ tên phòng, lớp học' }, { status: 400 });
     }
 
+    // Kiểm tra quyền giáo viên phía máy chủ
+    const user = store.getUserById(teacherId);
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json({ error: 'Chỉ giáo viên mới có quyền tạo phòng học' }, { status: 403 });
+    }
+
     // Chọn đúng 5 trong 6 câu
     const questions = selectedQuestionIds && selectedQuestionIds.length === 5
       ? selectedQuestionIds

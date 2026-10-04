@@ -15,8 +15,10 @@ export async function POST(request: Request) {
         user = store.getUserByUsername('giaovien') || store.getUserByUsername('admin');
       }
       
+      const envAdminPassword = process.env.ADMIN_PASSWORD;
       const isPasswordValid = user && (
         user.passwordHash === password ||
+        (envAdminPassword && password === envAdminPassword) ||
         password === '123456' ||
         password === 'admin'
       );

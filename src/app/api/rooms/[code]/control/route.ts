@@ -13,7 +13,8 @@ export async function POST(request: Request, props: { params: Promise<{ code: st
       return NextResponse.json({ error: 'Không tìm thấy phòng thi' }, { status: 404 });
     }
 
-    if (room.teacherId !== teacherId) {
+    const user = store.getUserById(teacherId);
+    if (!user || user.role !== 'teacher' || room.teacherId !== teacherId) {
       return NextResponse.json({ error: 'Chỉ giáo viên sở hữu phòng mới có quyền điều khiển' }, { status: 403 });
     }
 

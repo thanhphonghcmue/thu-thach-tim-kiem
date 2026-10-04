@@ -10,8 +10,9 @@ export async function POST(request: Request, props: { params: Promise<{ code: st
     const targetId = participantId || studentId || groupId;
 
     const room = store.getRoomByCode(code);
-    if (!room || room.teacherId !== teacherId) {
-      return NextResponse.json({ error: 'Không có quyền duyệt điểm' }, { status: 403 });
+    const user = store.getUserById(teacherId);
+    if (!room || !user || user.role !== 'teacher' || room.teacherId !== teacherId) {
+      return NextResponse.json({ error: 'Chỉ giáo viên sở hữu phòng mới có quyền duyệt điểm' }, { status: 403 });
     }
 
     if (!targetId) {

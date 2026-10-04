@@ -5,16 +5,28 @@ import QRCode from 'qrcode';
  * Lấy địa chỉ IP mạng nội bộ (LAN) để các thiết bị khác (điện thoại) quét QR truy cập được
  */
 export function getLocalIpAddress(): string {
+  // 1. Ưu tiên cấu hình URL ứng dụng rõ ràng
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
   }
 
+  // 2. Tự động nhận diện Render.com
+  if (process.env.RENDER_EXTERNAL_URL) {
+    return process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '');
+  }
+
+  // 3. Tự động nhận diện Vercel
+  if (process.env.VERCEL_URL) {
+    const vUrl = process.env.VERCEL_URL.replace(/\/$/, '');
+    return vUrl.startsWith('http') ? vUrl : `https://${vUrl}`;
+  }
+
+  // 4. Nếu chạy local, lấy địa chỉ mạng nội bộ LAN cho điện thoại cùng Wi-Fi
   const interfaces = os.networkInterfaces();
   for (const name of Object.keys(interfaces)) {
     const netList = interfaces[name];
     if (!netList) continue;
     for (const net of netList) {
-      // Bỏ qua IPv6 và internal loopback (127.0.0.1)
       if (net.family === 'IPv4' && !net.internal) {
         return `http://${net.address}:3000`;
       }

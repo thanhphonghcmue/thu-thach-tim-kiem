@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import {
   User,
   ClassRoom,
@@ -30,24 +31,38 @@ interface DatabaseSchema {
   reflections: IndividualReflection[];
 }
 
-const DB_DIR = path.join(process.cwd(), 'data');
-const DB_FILE = path.join(DB_DIR, 'db.json');
+const getDbDir = () => {
+  if (process.env.DATA_DIR) return process.env.DATA_DIR;
+  const defaultDir = path.join(process.cwd(), 'data');
+  try {
+    if (!fs.existsSync(defaultDir)) {
+      fs.mkdirSync(defaultDir, { recursive: true });
+    }
+    return defaultDir;
+  } catch {
+    const tmpDir = path.join(os.tmpdir(), 'thu-thach-tim-kiem-data');
+    if (!fs.existsSync(tmpDir)) {
+      fs.mkdirSync(tmpDir, { recursive: true });
+    }
+    return tmpDir;
+  }
+};
 
 class Store {
   private data: DatabaseSchema;
+  private dbFile: string;
 
   constructor() {
+    const dbDir = getDbDir();
+    this.dbFile = path.join(dbDir, 'db.json');
     this.data = this.loadDatabase();
     this.ensureSeedData();
   }
 
   private loadDatabase(): DatabaseSchema {
     try {
-      if (!fs.existsSync(DB_DIR)) {
-        fs.mkdirSync(DB_DIR, { recursive: true });
-      }
-      if (fs.existsSync(DB_FILE)) {
-        const raw = fs.readFileSync(DB_FILE, 'utf-8');
+      if (fs.existsSync(this.dbFile)) {
+        const raw = fs.readFileSync(this.dbFile, 'utf-8');
         const parsed = JSON.parse(raw);
         if (!parsed.participants) parsed.participants = {};
         return parsed;
@@ -69,10 +84,11 @@ class Store {
 
   private saveDatabase() {
     try {
-      if (!fs.existsSync(DB_DIR)) {
-        fs.mkdirSync(DB_DIR, { recursive: true });
+      const dir = path.dirname(this.dbFile);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
       }
-      fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), 'utf-8');
+      fs.writeFileSync(this.dbFile, JSON.stringify(this.data, null, 2), 'utf-8');
     } catch (err) {
       console.error('Error saving db.json', err);
     }

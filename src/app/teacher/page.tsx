@@ -394,16 +394,10 @@ export default function TeacherDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Số nhóm chia:</label>
-                  <select
-                    value={groupCount}
-                    onChange={(e) => setGroupCount(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-sm border rounded-xl bg-white"
-                  >
-                    <option value={3}>3 nhóm (3-4 em/nhóm)</option>
-                    <option value={4}>4 nhóm</option>
-                    <option value={2}>2 nhóm</option>
-                  </select>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Hình thức thi:</label>
+                  <div className="w-full px-3 py-2 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 rounded-xl flex items-center justify-center">
+                    Cá nhân (Cả lớp 40-50 em cùng làm)
+                  </div>
                 </div>
               </div>
 
